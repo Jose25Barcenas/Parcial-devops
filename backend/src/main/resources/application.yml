@@ -1,0 +1,29 @@
+de:
+  flapdoodle:
+    mongodb:
+      embedded:
+        version: 4.0.6
+
+spring:
+  application:
+    name: sion-backend
+  autoconfigure:
+    exclude:
+      - de.flapdoodle.embed.mongo.spring.autoconfigure.EmbeddedMongoAutoConfiguration
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/sion_db}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: ${SERVER_PORT:3000}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:mySecretKeyForSionUnac2026MustBe32Chars}
+    expiration: 604800000
+  upload:
+    dir: ${UPLOAD_DIR:./uploads}

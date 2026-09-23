@@ -1,0 +1,52 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Java / Maven
+backend/target/
+backend/*.class
+backend/*.jar
+backend/.mvn/
+*.iml
+.idea/
+
+# Docker
+mongo-data/
+
+# Uploads (keep directory structure)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Secrets
+.env
+backend/.env
+
+# Carpetas basura
+backend;C/
+
+# Terraform (evitar subir estado)
+terraform/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars

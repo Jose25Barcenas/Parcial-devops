@@ -1,0 +1,392 @@
+.pageTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin: 0 0 0.25rem 0;
+}
+
+.pageSubtitle {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin: 0 0 1.5rem 0;
+}
+
+.pageSubtitle strong { color: #1F2937; }
+
+/* Payment Card */
+.paymentCard {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid #f3f4f6;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  margin-bottom: 1.25rem;
+}
+
+.sectionTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 1rem 0;
+}
+
+/* Receipt */
+.receipt {
+  border-radius: 0.75rem;
+  border: 2px dashed #e5e7eb;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+  background: #fafbfc;
+}
+
+.receiptHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.receiptLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #9ca3af;
+  margin-bottom: 0.25rem;
+}
+
+.receiptTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.receiptNumber {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.125rem;
+}
+
+.receiptNumber strong {
+  color: #374151;
+}
+
+.receiptDate {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.5rem;
+}
+
+.receiptInfo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 2rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.875rem;
+}
+
+.receiptInfoLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9ca3af;
+}
+
+.receiptInfoValue {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.receiptAmount {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  background: #2A5783;
+}
+
+.receiptAmountLabel {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.receiptAmountValue {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Methods Grid */
+.methodsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.methodBtn {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  text-align: left;
+  border: 2px solid #e5e7eb;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.methodBtn:hover:not(:disabled) { 
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.methodBtn:disabled {
+  opacity: 0.6;
+}
+
+.methodBtnSelected {
+  border-color: #2A5783;
+  background: #EAF3FA;
+}
+
+.methodIcon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.methodInfo { flex: 1; min-width: 0; }
+
+.methodLabel { 
+  font-weight: 600; 
+  font-size: 0.875rem; 
+  color: #1F2937; 
+}
+
+.methodDesc { 
+  font-size: 0.75rem; 
+  color: #9CA3AF; 
+  margin-top: 0.125rem; 
+}
+
+.methodActor {
+  font-size: 10px;
+  font-weight: 600;
+  color: #2A5783;
+  margin-top: 0.375rem;
+}
+
+.methodCheck {
+  width: 16px;
+  height: 16px;
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+}
+
+/* Upload Area */
+.uploadArea {
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  background: #EAF3FA;
+  border: 1px solid rgba(42,87,131,0.13);
+}
+
+.uploadTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #2A5783;
+  margin: 0 0 0.5rem 0;
+}
+
+.uploadBox {
+  border: 2px dashed;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  background: white;
+}
+
+.uploadBox:hover {
+  border-color: #60a5fa !important;
+}
+
+.uploadIcon {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 0.5rem;
+  color: #9ca3af;
+}
+
+.uploadText {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.uploadTextHighlight {
+  font-weight: 600;
+  color: #2A5783;
+}
+
+.uploadHint {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.25rem;
+}
+
+.uploadSuccess {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4B7F52;
+}
+
+/* Timeline */
+.timeline {
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  background: #F5F5F5;
+}
+
+.timelineTitle {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #6b7280;
+  margin: 0 0 1rem 0;
+}
+
+.timelineSteps {
+  display: flex;
+  align-items: center;
+}
+
+.timelineStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  flex: 1;
+}
+
+.timelineStep:last-child {
+  flex: none;
+}
+
+.timelineCircle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.timelineCircleDone {
+  background: #4B7F52;
+  color: white;
+}
+
+.timelineCircleActive {
+  background: #D6B656;
+  color: white;
+}
+
+.timelineCirclePending {
+  background: #e5e7eb;
+  color: #9ca3af;
+}
+
+.timelineLabel {
+  font-size: 10px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.timelineLabelDone { color: #4B7F52; }
+.timelineLabelActive { color: #D6B656; }
+.timelineLabelPending { color: #9ca3af; }
+
+.timelineLine {
+  flex: 1;
+  height: 3px;
+  margin: 0 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.timelineLineDone { background: #4B7F52; }
+.timelineLinePending { background: #e5e7eb; }
+
+/* Confirmed Banner */
+.confirmedBanner {
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  background: rgba(75,127,82,0.08);
+  border: 1.5px solid #4B7F52;
+  animation: slide-in 0.35s ease both;
+}
+
+.confirmedHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.confirmedIcon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.confirmedTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #4B7F52;
+}
+
+.confirmedDesc {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0.125rem 0 0 0;
+}
+
+.confirmedRef {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.25rem;
+}
+
+/* Footer Row */
+.footerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.footerHint { font-size: 0.875rem; color: #6B7280; }
+
+.footerStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}

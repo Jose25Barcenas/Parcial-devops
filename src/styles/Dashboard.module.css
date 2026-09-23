@@ -1,0 +1,683 @@
+/* ─── Dashboard Layout ─────────────────────────────────────────────────────── */
+.dashboardWrapper {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.dashboardTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.dashboardSubtitle {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin: 0.25rem 0 0 0;
+}
+
+.dashboardBackBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #E5E7EB;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #374151;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dashboardBackBtn:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+
+/* ─── KPI Cards ───────────────────────────────────────────────────────────── */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.kpiCard {
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid #E5E7EB;
+  transition: box-shadow 0.2s;
+}
+
+.kpiCard:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.kpiCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.kpiCardIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kpiCardTrend {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.kpiCardTrendUp {
+  color: #4B7F52;
+  background: rgba(75, 127, 82, 0.1);
+}
+
+.kpiCardTrendDown {
+  color: #D32F2F;
+  background: rgba(211, 47, 47, 0.1);
+}
+
+.kpiCardValue {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1;
+}
+
+.kpiCardLabel {
+  font-size: 0.8125rem;
+  color: #6B7280;
+  margin-top: 0.375rem;
+}
+
+/* ─── Section Cards ───────────────────────────────────────────────────────── */
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.dashboardGridFull {
+  grid-column: 1 / -1;
+}
+
+.dashboardCard {
+  background: #fff;
+  border-radius: 0.75rem;
+  border: 1px solid #E5E7EB;
+  overflow: hidden;
+}
+
+.dashboardCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.dashboardCardTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.dashboardCardBody {
+  padding: 1.25rem;
+}
+
+/* ─── Process Flow (BPM) ──────────────────────────────────────────────────── */
+.processFlow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  padding: 1.5rem 0;
+  overflow-x: auto;
+}
+
+.processFlowNode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.processFlowCircle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  position: relative;
+  z-index: 2;
+}
+
+.processFlowCircleInscription { background: #2A5783; }
+.processFlowCirclePayment { background: #D6B656; }
+.processFlowCircleDocuments { background: #5B9BD5; }
+.processFlowCircleAdmission { background: #4B7F52; }
+
+.processFlowLabel {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+}
+
+.processFlowStats {
+  margin-top: 0.375rem;
+  font-size: 0.75rem;
+  color: #6B7280;
+  text-align: center;
+}
+
+.processFlowTime {
+  margin-top: 0.25rem;
+  font-size: 0.6875rem;
+  color: #9CA3AF;
+  text-align: center;
+}
+
+.processFlowArrow {
+  display: flex;
+  align-items: center;
+  padding-top: 18px;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.processFlowArrowLine {
+  flex: 1;
+  height: 2px;
+  background: #D1D5DB;
+  position: relative;
+}
+
+.processFlowArrowLine::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -4px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid #D1D5DB;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+}
+
+.processFlowArrowTime {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6875rem;
+  color: #9CA3AF;
+  white-space: nowrap;
+}
+
+/* ─── Process Table ───────────────────────────────────────────────────────── */
+.processTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.processTable th {
+  text-align: left;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid #E5E7EB;
+  background: #F9FAFB;
+}
+
+.processTable td {
+  padding: 0.75rem;
+  font-size: 0.8125rem;
+  color: #374151;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.processTable tr:hover td {
+  background: #F9FAFB;
+}
+
+.processTableId {
+  font-weight: 600;
+  color: #2A5783;
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.stageChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.stageChipInscription { background: rgba(42, 87, 131, 0.1); color: #2A5783; }
+.stageChipPayment { background: rgba(214, 182, 86, 0.15); color: #B8941E; }
+.stageChipDocuments { background: rgba(91, 155, 213, 0.1); color: #3A7CC0; }
+.stageChipAdmission { background: rgba(75, 127, 82, 0.1); color: #4B7F52; }
+.stageChipCompleted { background: rgba(75, 127, 82, 0.1); color: #4B7F52; }
+
+.decisionChip {
+  display: inline-flex;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.decisionAdmitted { background: rgba(75, 127, 82, 0.1); color: #4B7F52; }
+.decisionRejected { background: rgba(211, 47, 47, 0.1); color: #D32F2F; }
+.decisionPending { background: rgba(214, 182, 86, 0.15); color: #B8941E; }
+
+.timeCell {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: #6B7280;
+}
+
+/* ─── Bar Chart ───────────────────────────────────────────────────────────── */
+.barChart {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.barChartYAxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 24px;
+}
+
+.barChartYLabel {
+  font-size: 0.6875rem;
+  color: #9CA3AF;
+  text-align: right;
+  min-width: 20px;
+}
+
+.barChartBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.barChartCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.barChartBarWrapper {
+  width: 100%;
+  height: calc(100% - 24px);
+  display: flex;
+  align-items: flex-end;
+}
+
+.barChartBar {
+  width: 100%;
+  min-height: 4px;
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  transition: height 0.4s ease;
+}
+
+.barChartBarValue {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.barChartLabel {
+  font-size: 0.6875rem;
+  color: #6B7280;
+  text-align: center;
+  margin-top: 0.375rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+}
+
+/* ─── Donut Chart ─────────────────────────────────────────────────────────── */
+.donutChart {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.donutEmpty {
+  color: #9CA3AF;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+.donutSegment {
+  transition: stroke-dasharray 0.4s ease;
+}
+
+.donutTotal {
+  font-size: 1.5rem;
+  font-weight: 700;
+  fill: #111827;
+}
+
+.donutLabel {
+  font-size: 0.75rem;
+  fill: #9CA3AF;
+}
+
+.donutLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.donutLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.donutLegendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.donutLegendText {
+  font-size: 0.8125rem;
+  color: #374151;
+}
+
+/* ─── Line Chart ──────────────────────────────────────────────────────────── */
+.lineChart {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.lineChartLegend {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.lineChartLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: #6B7280;
+}
+
+.lineChartLegendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.lineChartGrid {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.lineChartYAxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.lineChartYLabel {
+  font-size: 0.6875rem;
+  color: #9CA3AF;
+  text-align: right;
+  min-width: 20px;
+}
+
+.lineChartArea {
+  flex: 1;
+  position: relative;
+}
+
+.lineChartSvg {
+  width: 100%;
+  height: calc(100% - 20px);
+  display: block;
+}
+
+.lineChartXLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6875rem;
+  color: #9CA3AF;
+}
+
+/* ─── Stage Bar ───────────────────────────────────────────────────────────── */
+.stageBar {
+  margin-bottom: 1rem;
+}
+
+.stageBar:last-child {
+  margin-bottom: 0;
+}
+
+.stageBarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.375rem;
+}
+
+.stageBarLabel {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.stageBarValue {
+  font-size: 0.75rem;
+  color: #6B7280;
+}
+
+.stageBarTrack {
+  height: 8px;
+  background: #F3F4F6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.stageBarFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* ─── Metrics Widget (for user screens) ───────────────────────────────────── */
+.metricsWidget {
+  background: #fff;
+  border-radius: 0.75rem;
+  border: 1px solid #E5E7EB;
+  padding: 1rem;
+}
+
+.metricsWidgetTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.75rem;
+}
+
+.metricsWidgetItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.metricsWidgetItem:last-child {
+  border-bottom: none;
+}
+
+.metricsWidgetItemLabel {
+  font-size: 0.8125rem;
+  color: #374151;
+}
+
+.metricsWidgetItemValue {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.metricsWidgetItemValueOk { color: #4B7F52; }
+.metricsWidgetItemValueWarn { color: #D6B656; }
+.metricsWidgetItemValueNeutral { color: #6B7280; }
+
+.metricsWidgetFooter {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #F3F4F6;
+  font-size: 0.75rem;
+  color: #9CA3AF;
+  text-align: center;
+}
+
+/* ─── Process Flow Widget (inline) ────────────────────────────────────────── */
+.processFlowWidget {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0.75rem 0;
+}
+
+.processFlowWidgetNode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.processFlowWidgetDot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  z-index: 2;
+}
+
+.processFlowWidgetDotDone {
+  background: #4B7F52;
+}
+
+.processFlowWidgetDotActive {
+  background: #2A5783;
+  box-shadow: 0 0 0 3px rgba(42, 87, 131, 0.2);
+}
+
+.processFlowWidgetDotPending {
+  background: #D1D5DB;
+}
+
+.processFlowWidgetLabel {
+  margin-top: 0.375rem;
+  font-size: 0.625rem;
+  color: #6B7280;
+  text-align: center;
+}
+
+.processFlowWidgetArrow {
+  flex: 0.5;
+  height: 2px;
+  background: #E5E7EB;
+  position: relative;
+  margin-top: -16px;
+}
+
+.processFlowWidgetArrowDone {
+  background: #4B7F52;
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboardWrapper {
+    padding: 1rem;
+  }
+  .kpiGrid {
+    grid-template-columns: 1fr;
+  }
+  .processFlow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .processFlowArrow {
+    transform: rotate(90deg);
+    min-width: unset;
+    min-height: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+}

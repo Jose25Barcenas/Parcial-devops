@@ -1,0 +1,66 @@
+stages:
+  - lint
+  - test
+  - build
+  - deploy
+
+variables:
+  DOCKER_TLS_CERTDIR: "/certs"
+
+lint-frontend:
+  stage: lint
+  image: node:20
+  script:
+    - npm ci
+    - npm run lint
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+
+test-backend:
+  stage: test
+  image: maven:3.9-eclipse-temurin-17
+  script:
+    - cd backend
+    - mvn -B test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+
+build-frontend:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker build -f Dockerfile.frontend -t $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA .
+    - docker push $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+build-backend:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA ./backend
+    - docker push $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+deploy-terraform:
+  stage: deploy
+  image: hashicorp/terraform:1.6
+  script:
+    - cd terraform
+    - terraform init
+    - terraform fmt -check
+    - terraform validate
+    - terraform plan -out=tfplan
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  artifacts:
+    paths:
+      - terraform/tfplan

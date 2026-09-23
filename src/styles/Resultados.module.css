@@ -1,0 +1,204 @@
+.pageTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin: 0 0 0.25rem 0;
+}
+
+.pageSubtitle {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin: 0 0 1.5rem 0;
+}
+
+.tabsRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.tabBtn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #E5E7EB;
+  background: white;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tabBtnActive {
+  background: #2A5783;
+  color: white;
+  border-color: #2A5783;
+}
+
+/* Result Card */
+.resultCard {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid #f3f4f6;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.resultCardInner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.resultIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(214,182,86,0.15);
+  flex-shrink: 0;
+}
+
+.resultIconSvg { width: 20px; height: 20px; }
+
+.resultTitle { font-weight: 700; color: #1F2937; }
+.resultDesc { font-size: 0.875rem; color: #6B7280; margin: 0.25rem 0 0 0; }
+
+/* Admitted Card */
+.admittedCard {
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background: rgba(75,127,82,0.08);
+  border: 2px solid #4B7F52;
+  animation: slide-in 0.35s ease both;
+}
+
+.admittedTitle { 
+  font-weight: 700; 
+  font-size: 1.125rem; 
+  color: #4B7F52; 
+  margin: 0 0 0.375rem 0; 
+}
+
+.admittedDesc { 
+  font-size: 0.875rem; 
+  color: #4B5563; 
+  margin: 0 0 1rem 0; 
+}
+
+.admittedGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.admittedField {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+  border: 1px solid #f3f4f6;
+}
+
+.admittedFieldLabel { font-size: 0.75rem; color: #9CA3AF; margin-bottom: 0.25rem; }
+.admittedFieldValue { font-size: 0.875rem; font-weight: 700; }
+
+/* Rejected Card */
+.rejectedCard {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid #f3f4f6;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.rejectedTitle { font-weight: 700; color: #1F2937; margin: 0 0 0.5rem 0; }
+.rejectedDesc { font-size: 0.875rem; color: #4B5563; margin: 0 0 1rem 0; }
+.rejectedActions { display: flex; gap: 0.75rem; }
+
+/* Timeline Vertical */
+.timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.timelineItem {
+  display: flex;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.timelineItemLine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timelineItemDot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: white;
+}
+
+.timelineItemDotDone { background: #4B7F52; }
+.timelineItemDotActive { background: #D6B656; }
+.timelineItemDotPending { background: #e5e7eb; color: #9ca3af; }
+
+.timelineItemConnector {
+  width: 2px;
+  flex: 1;
+  min-height: 24px;
+  margin: 4px 0;
+}
+
+.timelineItemConnectorDone { background: #4B7F52; }
+.timelineItemConnectorPending { background: #e5e7eb; }
+
+.timelineItemContent {
+  flex: 1;
+  padding-bottom: 1.25rem;
+}
+
+.timelineItemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.125rem;
+}
+
+.timelineItemLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.timelineItemLabelDone { color: #4B7F52; }
+.timelineItemLabelActive { color: #D6B656; }
+.timelineItemLabelPending { color: #9ca3af; }
+
+.timelineItemBadge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.timelineItemDate {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.timelineItemDesc {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}

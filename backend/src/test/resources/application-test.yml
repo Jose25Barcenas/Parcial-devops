@@ -1,0 +1,11 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/sion_test_db
+
+app:
+  jwt:
+    secret: test-secret-key-for-testing-only
+    expiration: 604800000
+  upload:
+    dir: ./test-uploads
