@@ -33,3 +33,9 @@ variable "repo_url" {
   type        = string
   default     = "https://github.com/Jose25Barcenas/Parcial-devops.git"
 }
+
+variable "ami_id" {
+  description = "AMI creada con Packer (vacío = usar Ubuntu 22.04 oficial)"
+  type        = string
+  default     = ""
+}

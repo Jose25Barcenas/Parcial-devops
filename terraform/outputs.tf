@@ -14,8 +14,8 @@ output "public_dns" {
 }
 
 output "ami_id" {
-  description = "AMI usada (Ubuntu 22.04)"
-  value       = data.aws_ami.ubuntu.id
+  description = "AMI utilizada (Packer o Ubuntu oficial)"
+  value       = local.ami_id
 }
 
 output "security_group_id" {

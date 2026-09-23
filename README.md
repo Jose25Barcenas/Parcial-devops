@@ -48,6 +48,8 @@ sion_unac/
 ├── docker-compose.yml          # MongoDB + Backend + Frontend
 ├── Dockerfile.frontend         # Build del frontend
 ├── nginx.conf                  # Proxy reverso
+├── packer/                     # AMI image (Packer)
+│   └── app.pkr.hcl            # Template para AMI en AWS
 ├── terraform/                  # Infraestructura AWS (VPC, EC2, AMI, SG)
 ├── .gitlab-ci.yml              # Pipeline CI/CD
 ├── vite.config.js
@@ -185,29 +187,67 @@ Las variables de entorno del backend se pueden configurar en `backend/.env`:
 | `SERVER_PORT` | `3000` | Puerto del backend |
 | `UPLOAD_DIR` | `./uploads` | Directorio de archivos |
 
-## Infraestructura (Terraform)
+## Infraestructura (Packer + Terraform)
 
-La infraestructura en la nube esta definida en [`terraform/`](terraform/).
+La infraestructura en la nube esta definida en [`packer/`](packer/) y [`terraform/`](terraform/).
 
-### Componentes
+### AMI con Packer
+
+Packer construye una AMI personalizada con Docker y la app pre-configurada:
+
+```bash
+cd packer
+
+# Requiere AWS credentials configuradas (env o ~/.aws)
+export AWS_ACCESS_KEY_ID="tu-access-key"
+export AWS_SECRET_ACCESS_KEY="tu-secret-key"
+
+# Validar template
+packer init .
+packer validate .
+
+# Construir AMI
+packer build -var "aws_region=us-east-1" app.pkr.hcl
+
+# El output ami_id se usa en Terraform
+```
+
+| Paso | Comando | Resultado |
+|------|---------|-----------|
+| 1. Init | `packer init .` | Descarga plugins de AWS |
+| 2. Validate | `packer validate .` | Verifica sintaxis |
+| 3. Build | `packer build app.pkr.hcl` | Crea AMI en AWS |
+| 4. Copiar AMI ID | output `ami_id` | Para Terraform |
+
+**Que incluye la AMI:**
+- Ubuntu 22.04 LTS
+- Docker + Docker Compose
+- Nginx
+- Archivos de la app (`docker-compose.yml`, Dockerfiles, `nginx.conf`)
+
+### Componentes Terraform
 
 | Recurso | Descripcion |
 |---------|-------------|
 | VPC | Red privada `10.0.0.0/16` con subnet publica |
 | Internet Gateway | Salida a Internet para la subnet |
 | Security Group | Puertos 22 (SSH), 80 (HTTP), 5173 (front), 3000 (API) |
-| EC2 | Instancia Ubuntu 22.04 (`t3.small`) con Docker preinstalado |
-| AMI | Ubuntu 22.04 LTS (canonical, filtrada dinamicamente) |
+| EC2 | Instancia con AMI de Packer (o Ubuntu oficial si no hay AMI) |
+| AMI | Creada por Packer (`packer/app.pkr.hcl`) |
 | Key Pair | Clave SSH para acceso a la instancia |
 
 ### Como desplegar
 
 ```bash
+# Opcional: primero crear AMI con Packer
+cd packer && packer build app.pkr.hcl && cd ..
+
+# Terraform
 cd terraform
 
 # 1. Copiar y editar variables
 cp terraform.tfvars.example terraform.tfvars
-# Editar terraform.tfvars (IP SSH, ruta clave, region, etc.)
+# Editar terraform.tfvars (ami_id de Packer, IP SSH, region, etc.)
 
 # 2. Inicializar proveedores
 terraform init
@@ -244,7 +284,7 @@ Internet Gateway ──► Route Table (0.0.0.0/0)
 Public Subnet 10.0.1.0/24
    │
    ▼
-EC2 (Ubuntu 22.04 + Docker)
+EC2 (AMI Packer: Ubuntu 22.04 + Docker)
    ├── Frontend :5173
    ├── Backend  :3000
    └── MongoDB  :27017
@@ -260,6 +300,7 @@ Pipeline definido en `.gitlab-ci.yml`:
 | test | `test-backend` | `mvn test` (JUnit) |
 | build | `build-frontend` | Build imagen Docker del front |
 | build | `build-backend` | Build imagen Docker del back |
+| image | `build-ami` | Construye AMI con Packer (manual) |
 | deploy | `deploy-terraform` | `terraform plan` (manual) |
 
 ## Git

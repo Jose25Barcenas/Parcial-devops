@@ -34,6 +34,11 @@ data "aws_ami" "ubuntu" {
   }
 }
 
+# AMI de Packer si se define, si no Ubuntu oficial
+locals {
+  ami_id = var.ami_id != "" ? var.ami_id : data.aws_ami.ubuntu.id
+}
+
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
@@ -135,7 +140,7 @@ resource "aws_key_pair" "deployer" {
 }
 
 resource "aws_instance" "app" {
-  ami                    = data.aws_ami.ubuntu.id
+  ami                    = local.ami_id
   instance_type          = var.instance_type
   subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.app.id]
@@ -148,10 +153,6 @@ resource "aws_instance" "app" {
 
   user_data = base64encode(<<-EOF
     #!/bin/bash
-    apt-get update -y
-    apt-get install -y docker.io docker-compose-v2 git
-    systemctl enable --now docker
-    usermod -aG docker ubuntu
     git clone ${var.repo_url} /home/ubuntu/app
     cd /home/ubuntu/app && docker compose up -d --build
   EOF
