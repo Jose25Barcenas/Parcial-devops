@@ -2,8 +2,6 @@ stages:
   - lint
   - test
   - build
-  - image
-  - deploy
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
@@ -49,36 +47,3 @@ build-backend:
     - docker push $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
-
-build-ami:
-  stage: image
-  image: hashicorp/packer:1.10
-  script:
-    - cd packer
-    - packer init .
-    - packer validate .
-    - packer build -var "aws_region=$AWS_DEFAULT_REGION" app.pkr.hcl
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: manual
-  environment:
-    name: production
-  artifacts:
-    reports:
-      dotenv: packer/packer.env
-
-deploy-terraform:
-  stage: deploy
-  image: hashicorp/terraform:1.6
-  script:
-    - cd terraform
-    - terraform init
-    - terraform fmt -check
-    - terraform validate
-    - terraform plan -out=tfplan
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: manual
-  artifacts:
-    paths:
-      - terraform/tfplan

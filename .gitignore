@@ -44,14 +44,3 @@ backend/.env
 
 # Carpetas basura
 backend;C/
-
-# Terraform (evitar subir estado)
-terraform/.terraform/
-*.tfstate
-*.tfstate.*
-*.tfvars
-
-# Packer
-packer_cache/
-*.pkrvars.hcl
-!packer/*.pkr.hcl
