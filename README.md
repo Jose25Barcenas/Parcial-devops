@@ -126,10 +126,4 @@ Todos los endpoints usan prefijo `/api/v1`:
 3. Header: `Authorization: Bearer <token>`
 4. Probar los endpoints protegidos
 
-## CI/CD (GitLab CI)
 
-| Etapa | Job | Que hace |
-|-------|-----|----------|
-| lint | `lint-frontend` | `npm run lint` |
-| test | `test-backend` | `mvn test` |
-| build | `build-frontend` / `build-backend` | Build e push de imagenes Docker (main) |
