@@ -22,6 +22,10 @@ public class User {
     private String passwordHash;
     private String phone;
     private String role = "aspirant";
+    private int failedAttempts = 0;
+    private LocalDateTime lockedUntil;
+    private String passwordResetCode;
+    private LocalDateTime passwordResetExpiresAt;
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
 }

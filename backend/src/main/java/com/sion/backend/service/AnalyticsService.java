@@ -1,32 +1,38 @@
 package com.sion.backend.service;
 
+import com.sion.backend.dto.response.GoalResponse;
 import com.sion.backend.model.AdmissionResult;
 import com.sion.backend.model.AppDocument;
+import com.sion.backend.model.Goal;
 import com.sion.backend.model.Inscription;
 import com.sion.backend.model.Payment;
 import com.sion.backend.repository.AdmissionResultRepository;
 import com.sion.backend.repository.DocumentRepository;
+import com.sion.backend.repository.GoalRepository;
 import com.sion.backend.repository.InscriptionRepository;
 import com.sion.backend.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AnalyticsService {
 
+    private static final String[] MONTHS = {"Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"};
+
     private final InscriptionRepository inscriptionRepository;
     private final PaymentRepository paymentRepository;
     private final AdmissionResultRepository admissionResultRepository;
     private final DocumentRepository documentRepository;
+    private final GoalRepository goalRepository;
     private final MongoTemplate mongoTemplate;
 
     public Map<String, Object> getKPIs() {
@@ -49,6 +55,24 @@ public class AnalyticsService {
         double completionRate = total > 0 ? Math.round((completed * 100.0) / total) : 0;
         double admissionRate = completed > 0 ? Math.round((admitted * 100.0) / completed) : 0;
 
+        Map<String, AdmissionResult> admissionByInscription = allAdmissions.stream()
+                .collect(Collectors.toMap(AdmissionResult::getInscriptionId, a -> a, (a, b) -> a));
+
+        double totalDays = 0;
+        int counted = 0;
+        for (Inscription inscription : allInscriptions) {
+            AdmissionResult admission = admissionByInscription.get(inscription.getId());
+            LocalDateTime end = admission != null ? admission.getEvaluatedAt() : null;
+            if (end == null && "completed".equals(inscription.getStatus())) {
+                end = inscription.getUpdatedAt();
+            }
+            if (inscription.getCreatedAt() != null && end != null) {
+                totalDays += Duration.between(inscription.getCreatedAt(), end).toDays();
+                counted++;
+            }
+        }
+        double avgTotalDays = counted > 0 ? Math.round(totalDays / counted * 10.0) / 10.0 : 0;
+
         Map<String, Object> kpis = new LinkedHashMap<>();
         kpis.put("totalInscriptions", total);
         kpis.put("admitted", admitted);
@@ -57,9 +81,149 @@ public class AnalyticsService {
         kpis.put("completionRate", (long) completionRate);
         kpis.put("admissionRate", (long) admissionRate);
         kpis.put("inscriptionsWithPayment", inscriptionsWithPayment);
-        kpis.put("avgTotalDays", 0);
+        kpis.put("avgTotalDays", avgTotalDays);
 
         return kpis;
+    }
+
+    public Map<String, Object> getRevenue() {
+        List<Payment> payments = paymentRepository.findAll();
+
+        double totalCollected = 0;
+        double totalPending = 0;
+        long countCollected = 0;
+        long countPending = 0;
+        Map<String, double[]> byMethod = new LinkedHashMap<>();
+
+        for (Payment payment : payments) {
+            double amount = payment.getAmount() != null ? payment.getAmount() : 0;
+            boolean isCompleted = "completed".equals(payment.getStatus());
+            String method = payment.getMethod() != null ? payment.getMethod() : "otro";
+
+            if (isCompleted) {
+                totalCollected += amount;
+                countCollected++;
+            } else {
+                totalPending += amount;
+                countPending++;
+            }
+
+            double[] agg = byMethod.computeIfAbsent(method, k -> new double[2]);
+            agg[0]++;
+            if (isCompleted) {
+                agg[1] += amount;
+            }
+        }
+
+        List<Map<String, Object>> methods = new ArrayList<>();
+        byMethod.forEach((method, agg) -> {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("method", method);
+            entry.put("count", (long) agg[0]);
+            entry.put("collected", Math.round(agg[1]));
+            methods.add(entry);
+        });
+
+        double avgAmount = countCollected > 0 ? Math.round(totalCollected / countCollected) : 0;
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("totalCollected", Math.round(totalCollected));
+        result.put("totalPending", Math.round(totalPending));
+        result.put("totalExpected", Math.round(totalCollected + totalPending));
+        result.put("countCollected", countCollected);
+        result.put("countPending", countPending);
+        result.put("countTotal", payments.size());
+        result.put("avgAmount", avgAmount);
+        result.put("byMethod", methods);
+
+        return result;
+    }
+
+    public List<Map<String, Object>> getRevenueMonthly() {
+        List<Payment> payments = paymentRepository.findAll();
+
+        Map<String, Map<String, Double>> monthlyData = new LinkedHashMap<>();
+        for (String month : MONTHS) {
+            Map<String, Double> data = new LinkedHashMap<>();
+            data.put("collected", 0.0);
+            data.put("pending", 0.0);
+            monthlyData.put(month, data);
+        }
+
+        for (Payment payment : payments) {
+            double amount = payment.getAmount() != null ? payment.getAmount() : 0;
+            boolean isCompleted = "completed".equals(payment.getStatus());
+            LocalDateTime date = isCompleted ? payment.getPaidAt() : payment.getCreatedAt();
+            if (date == null) {
+                continue;
+            }
+            String month = MONTHS[date.getMonthValue() - 1];
+            String field = isCompleted ? "collected" : "pending";
+            monthlyData.get(month).put(field, monthlyData.get(month).get(field) + amount);
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        monthlyData.forEach((month, data) -> {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("month", month);
+            entry.put("collected", Math.round(data.get("collected")));
+            entry.put("pending", Math.round(data.get("pending")));
+            result.add(entry);
+        });
+
+        return result;
+    }
+
+    public List<Map<String, Object>> getGoalsProgress() {
+        List<Goal> goals = goalRepository.findAll();
+
+        long totalInscriptions = inscriptionRepository.count();
+        long documents = documentRepository.count();
+        long admitted = admissionResultRepository.findAll().stream()
+                .filter(a -> "admitted".equals(a.getDecision())).count();
+        double revenue = paymentRepository.findAll().stream()
+                .filter(p -> "completed".equals(p.getStatus()))
+                .mapToDouble(p -> p.getAmount() != null ? p.getAmount() : 0)
+                .sum();
+        long completed = inscriptionRepository.findAll().stream()
+                .filter(i -> "completed".equals(i.getStatus())).count();
+        double admissionRate = completed > 0 ? Math.round((admitted * 100.0) / completed) : 0;
+
+        Map<String, Double> actuals = new LinkedHashMap<>();
+        actuals.put("inscriptions", (double) totalInscriptions);
+        actuals.put("revenue", revenue);
+        actuals.put("admitted", (double) admitted);
+        actuals.put("documents", (double) documents);
+        actuals.put("admissionRate", admissionRate);
+
+        Map<String, Integer> keyOrder = new HashMap<>();
+        for (int i = 0; i < GoalService.VALID_KEYS.size(); i++) {
+            keyOrder.put(GoalService.VALID_KEYS.get(i), i);
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        goals.stream()
+                .sorted(Comparator.comparingInt(g -> keyOrder.getOrDefault(g.getKey(), 99)))
+                .forEach(goal -> {
+                    double actual = actuals.getOrDefault(goal.getKey(), 0.0);
+                    double target = goal.getTarget() != null ? goal.getTarget() : 0;
+                    double percent = target > 0 ? Math.round(actual * 100.0 / target) : 0;
+
+                    Map<String, Object> entry = new LinkedHashMap<>();
+                    entry.put("id", goal.getId());
+                    entry.put("key", goal.getKey());
+                    entry.put("label", goal.getLabel());
+                    entry.put("target", goal.getTarget());
+                    entry.put("actual", goal.getKey().equals("revenue") || goal.getKey().equals("admissionRate")
+                            ? Math.round(actual) : actual);
+                    entry.put("unit", GoalResponse.unitForKey(goal.getKey()));
+                    entry.put("percent", percent);
+                    entry.put("achieved", actual >= target);
+                    entry.put("period", goal.getPeriod());
+                    result.add(entry);
+                });
+
+        return result;
     }
 
     @SuppressWarnings("unchecked")
@@ -190,11 +354,10 @@ public class AnalyticsService {
         List<AdmissionResult> admissions = admissionResultRepository.findAll();
         List<AppDocument> documents = documentRepository.findAll();
 
-        String[] monthNames = {"Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"};
         Map<String, Map<String, Long>> monthlyData = new LinkedHashMap<>();
 
         for (int i = 0; i < 12; i++) {
-            monthlyData.put(monthNames[i], new LinkedHashMap<>() {{
+            monthlyData.put(MONTHS[i], new LinkedHashMap<>() {{
                 put("inscriptions", 0L);
                 put("payments", 0L);
                 put("documents", 0L);
@@ -204,28 +367,28 @@ public class AnalyticsService {
 
         for (Inscription ins : inscriptions) {
             if (ins.getCreatedAt() != null) {
-                String month = monthNames[ins.getCreatedAt().getMonthValue() - 1];
+                String month = MONTHS[ins.getCreatedAt().getMonthValue() - 1];
                 monthlyData.get(month).put("inscriptions", monthlyData.get(month).get("inscriptions") + 1);
             }
         }
 
         for (Payment pay : payments) {
             if (pay.getCreatedAt() != null) {
-                String month = monthNames[pay.getCreatedAt().getMonthValue() - 1];
+                String month = MONTHS[pay.getCreatedAt().getMonthValue() - 1];
                 monthlyData.get(month).put("payments", monthlyData.get(month).get("payments") + 1);
             }
         }
 
         for (AppDocument doc : documents) {
             if (doc.getUploadedAt() != null) {
-                String month = monthNames[doc.getUploadedAt().getMonthValue() - 1];
+                String month = MONTHS[doc.getUploadedAt().getMonthValue() - 1];
                 monthlyData.get(month).put("documents", monthlyData.get(month).get("documents") + 1);
             }
         }
 
         for (AdmissionResult adm : admissions) {
             if (adm.getEvaluatedAt() != null) {
-                String month = monthNames[adm.getEvaluatedAt().getMonthValue() - 1];
+                String month = MONTHS[adm.getEvaluatedAt().getMonthValue() - 1];
                 monthlyData.get(month).put("admissions", monthlyData.get(month).get("admissions") + 1);
             }
         }

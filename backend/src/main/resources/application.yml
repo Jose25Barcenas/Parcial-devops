@@ -1,18 +1,10 @@
-de:
-  flapdoodle:
-    mongodb:
-      embedded:
-        version: 4.0.6
-
 spring:
   application:
     name: sion-backend
-  autoconfigure:
-    exclude:
-      - de.flapdoodle.embed.mongo.spring.autoconfigure.EmbeddedMongoAutoConfiguration
   data:
     mongodb:
       uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/sion_db}
+      auto-index-creation: true
   servlet:
     multipart:
       max-file-size: 10MB
@@ -27,3 +19,8 @@ app:
     expiration: 604800000
   upload:
     dir: ${UPLOAD_DIR:./uploads}
+
+# demo-mode devuelve el codigo de recuperacion en la respuesta (solo demo local;
+# se activa explicitamente via variable de entorno DEMO_MODE en docker-compose.yml)
+sion:
+  demo-mode: ${DEMO_MODE:false}

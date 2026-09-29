@@ -22,10 +22,13 @@ public class MongoInitializer implements CommandLineRunner {
     private final PaymentRepository paymentRepository;
     private final DocumentRepository documentRepository;
     private final AdmissionResultRepository admissionResultRepository;
+    private final GoalRepository goalRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
+        seedGoals();
+
         if (userRepository.count() > 0) {
             log.info("Base de datos ya tiene datos, omitiendo seed");
             return;
@@ -111,7 +114,7 @@ public class MongoInitializer implements CommandLineRunner {
             AppDocument doc = new AppDocument();
             doc.setInscriptionId(ins1.getId());
             doc.setDocType(docType);
-            doc.setFileUrl("/uploads/sample-" + docType + ".pdf");
+            doc.setFileUrl("/api/v1/uploads/sample-" + docType + ".pdf");
             doc.setStatus("uploaded");
             doc.setUploadedAt(LocalDateTime.now().minusDays(3));
             documentRepository.save(doc);
@@ -121,7 +124,7 @@ public class MongoInitializer implements CommandLineRunner {
             AppDocument doc = new AppDocument();
             doc.setInscriptionId(ins2.getId());
             doc.setDocType(docType);
-            doc.setFileUrl("/uploads/sample-" + docType + "-2.pdf");
+            doc.setFileUrl("/api/v1/uploads/sample-" + docType + "-2.pdf");
             doc.setStatus("uploaded");
             doc.setUploadedAt(LocalDateTime.now().minusDays(1));
             documentRepository.save(doc);
@@ -145,5 +148,33 @@ public class MongoInitializer implements CommandLineRunner {
         admissionResultRepository.save(res2);
 
         log.info("Seed completado: 3 usuarios, 2 inscripciones, 2 pagos, 6 documentos, 2 resultados");
+    }
+
+    private void seedGoals() {
+        if (goalRepository.count() > 0) {
+            return;
+        }
+
+        log.info("Creando metas iniciales...");
+        String period = "2026-II";
+
+        saveGoal("inscriptions", "Inscripciones totales", 50.0, period);
+        saveGoal("revenue", "Ingresos por inscripcion (COP)", 4000000.0, period);
+        saveGoal("admitted", "Aspirantes admitidos", 30.0, period);
+        saveGoal("documents", "Documentos cargados", 150.0, period);
+        saveGoal("admissionRate", "Tasa de admision (%)", 70.0, period);
+
+        log.info("Seed de metas creado: 5 metas");
+    }
+
+    private void saveGoal(String key, String label, double target, String period) {
+        Goal goal = new Goal();
+        goal.setKey(key);
+        goal.setLabel(label);
+        goal.setTarget(target);
+        goal.setPeriod(period);
+        goal.setCreatedAt(LocalDateTime.now());
+        goal.setUpdatedAt(LocalDateTime.now());
+        goalRepository.save(goal);
     }
 }

@@ -1,0 +1,6 @@
+# Contexto de build del backend: solo el jar empaquetado.
+uploads
+.env
+src
+pom.xml
+test-uploads

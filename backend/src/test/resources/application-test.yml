@@ -9,3 +9,6 @@ app:
     expiration: 604800000
   upload:
     dir: ./test-uploads
+
+sion:
+  demo-mode: true

@@ -3,7 +3,7 @@ package com.sion.backend.service;
 import com.sion.backend.dto.request.PaymentRequest;
 import com.sion.backend.exception.ConflictException;
 import com.sion.backend.exception.ResourceNotFoundException;
-import com.sion.backend.exception.UnauthorizedException;
+import org.springframework.security.access.AccessDeniedException;
 import com.sion.backend.model.Inscription;
 import com.sion.backend.model.Payment;
 import com.sion.backend.repository.InscriptionRepository;
@@ -47,7 +47,7 @@ public class PaymentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Inscripcion no encontrada"));
 
         if (!inscription.getUserId().equals(userId)) {
-            throw new UnauthorizedException("No autorizado para pagar esta inscripcion");
+            throw new AccessDeniedException("No autorizado para pagar esta inscripcion");
         }
 
         if (paymentRepository.existsByInscriptionId(request.getInscriptionId())) {
@@ -69,15 +69,33 @@ public class PaymentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado"));
     }
 
-    public Payment confirm(String id, String transactionId) {
+    public Payment findByInscriptionId(String inscriptionId, String userId, String role) {
+        Inscription inscription = inscriptionRepository.findById(inscriptionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Inscripcion no encontrada"));
+
+        if (!inscription.getUserId().equals(userId) && !"admin".equals(role)) {
+            throw new AccessDeniedException("No autorizado para ver el pago de esta inscripcion");
+        }
+
+        return paymentRepository.findByInscriptionId(inscriptionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado"));
+    }
+
+    public Payment confirm(String id, String transactionId, String userId, String role) {
         Payment payment = findById(id);
+
+        Inscription inscription = inscriptionRepository.findById(payment.getInscriptionId()).orElse(null);
+        boolean isOwner = inscription != null && inscription.getUserId().equals(userId);
+        if (!isOwner && !"admin".equals(role)) {
+            throw new AccessDeniedException("No autorizado para confirmar este pago");
+        }
+
         payment.setStatus("completed");
         payment.setPaidAt(LocalDateTime.now());
         if (transactionId != null) {
             payment.setTransactionId(transactionId);
         }
 
-        Inscription inscription = inscriptionRepository.findById(payment.getInscriptionId()).orElse(null);
         if (inscription != null) {
             inscription.setStatus("completed");
             inscription.setUpdatedAt(LocalDateTime.now());
@@ -102,7 +120,7 @@ public class PaymentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Inscripcion no encontrada"));
 
         if (!inscription.getUserId().equals(userId)) {
-            throw new UnauthorizedException("No autorizado para subir comprobante a este pago");
+            throw new AccessDeniedException("No autorizado para subir comprobante a este pago");
         }
 
         try {
@@ -112,20 +130,27 @@ public class PaymentService {
             }
 
             String filename = "receipt-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 9)
-                    + getExtension(file.getOriginalFilename());
+                    + getExtension(file.getOriginalFilename(), file.getContentType());
             Path filePath = uploadPath.resolve(filename);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            payment.setReceiptUrl("/uploads/" + filename);
+            payment.setReceiptUrl("/api/v1/uploads/" + filename);
             return paymentRepository.save(payment);
         } catch (IOException e) {
             throw new RuntimeException("Error al guardar el comprobante", e);
         }
     }
 
-    private String getExtension(String filename) {
-        if (filename == null) return ".bin";
-        int dot = filename.lastIndexOf('.');
-        return dot >= 0 ? filename.substring(dot) : ".bin";
+    private String getExtension(String filename, String contentType) {
+        String ext = "";
+        if (filename != null && filename.lastIndexOf('.') >= 0) {
+            ext = filename.substring(filename.lastIndexOf('.') + 1)
+                    .replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+        }
+        if (List.of("pdf", "png", "jpg", "jpeg").contains(ext)) return "." + ext;
+        if ("application/pdf".equals(contentType)) return ".pdf";
+        if ("image/png".equals(contentType)) return ".png";
+        if ("image/jpeg".equals(contentType)) return ".jpg";
+        return ".bin";
     }
 }

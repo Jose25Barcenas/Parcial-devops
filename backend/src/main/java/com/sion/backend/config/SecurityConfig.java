@@ -1,6 +1,5 @@
 package com.sion.backend.config;
 
-import com.sion.backend.security.CustomUserDetailsService;
 import com.sion.backend.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -33,9 +32,23 @@ public class SecurityConfig {
             .cors(cors -> {})
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**", "/health").permitAll()
+                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/register",
+                        "/api/v1/auth/forgot-password", "/api/v1/auth/reset-password", "/health").permitAll()
+                .requestMatchers("/api/v1/uploads/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().authenticated()
+            )
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(401);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"status\":401,\"message\":\"No autenticado\"}");
+                })
+                .accessDeniedHandler((request, response, accessException) -> {
+                    response.setStatus(403);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"status\":403,\"message\":\"Acceso denegado\"}");
+                })
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

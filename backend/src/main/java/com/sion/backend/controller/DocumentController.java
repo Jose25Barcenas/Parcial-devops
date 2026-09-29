@@ -35,16 +35,22 @@ public class DocumentController {
     }
 
     @GetMapping("/{inscriptionId}")
-    public ResponseEntity<List<DocumentResponse>> getByInscription(@PathVariable String inscriptionId) {
-        List<DocumentResponse> docs = documentService.findByInscriptionId(inscriptionId).stream()
+    public ResponseEntity<List<DocumentResponse>> getByInscription(
+            @PathVariable String inscriptionId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.findByEmail(userDetails.getUsername());
+        List<DocumentResponse> docs = documentService.findByInscriptionId(inscriptionId, user.getId(), user.getRole()).stream()
                 .map(DocumentResponse::fromDocument)
                 .toList();
         return ResponseEntity.ok(docs);
     }
 
     @GetMapping("/doc/{id}")
-    public ResponseEntity<DocumentResponse> getById(@PathVariable String id) {
-        AppDocument doc = documentService.findById(id);
+    public ResponseEntity<DocumentResponse> getById(
+            @PathVariable String id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.findByEmail(userDetails.getUsername());
+        AppDocument doc = documentService.findById(id, user.getId(), user.getRole());
         return ResponseEntity.ok(DocumentResponse.fromDocument(doc));
     }
 
@@ -53,7 +59,7 @@ public class DocumentController {
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
         User user = userService.findByEmail(userDetails.getUsername());
-        documentService.delete(id, user.getId());
+        documentService.delete(id, user.getId(), user.getRole());
         return ResponseEntity.ok(new MessageResponse("Documento eliminado"));
     }
 }

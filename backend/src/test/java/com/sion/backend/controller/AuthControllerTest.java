@@ -16,6 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Map;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -106,6 +108,84 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldLockAccountAfterFiveFailedAttemptsAndUnlockWithResetCode() throws Exception {
+        User user = new User();
+        user.setFullName("Locked User");
+        user.setEmail("locked@test.com");
+        user.setPasswordHash(passwordEncoder.encode("password123"));
+        user.setRole("aspirant");
+        userRepository.save(user);
+
+        LoginRequest wrong = new LoginRequest();
+        wrong.setEmail("locked@test.com");
+        wrong.setPassword("wrong-pass");
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(wrong)))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        LoginRequest correct = new LoginRequest();
+        correct.setEmail("locked@test.com");
+        correct.setPassword("password123");
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(correct)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("bloqueada")));
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"locked@test.com\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.demoCode").isNotEmpty());
+
+        String forgotBody = mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"locked@test.com\"}"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String code = objectMapper.readTree(forgotBody).get("demoCode").asText();
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "email", "locked@test.com",
+                                "code", code,
+                                "newPassword", "nueva123"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").isNotEmpty());
+
+        LoginRequest afterReset = new LoginRequest();
+        afterReset.setEmail("locked@test.com");
+        afterReset.setPassword("nueva123");
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(afterReset)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty());
+    }
+
+    @Test
+    void shouldReturnOkForUnknownEmailOnForgotPassword() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"nobody@test.com\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.demoCode").doesNotExist())
+                .andExpect(jsonPath("$.message").isNotEmpty());
+    }
+
+    @Test
+    void shouldRejectInvalidResetCode() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"nobody@test.com\",\"code\":\"123456\",\"newPassword\":\"nueva123\"}"))
                 .andExpect(status().isUnauthorized());
     }
 }

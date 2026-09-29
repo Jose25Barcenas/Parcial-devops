@@ -11,11 +11,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/admissions")
@@ -26,6 +26,7 @@ public class AdmissionController {
     private final UserService userService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AdmissionResponse> create(@Valid @RequestBody AdmissionRequest request) {
         AdmissionResult result = admissionService.create(request);
         return ResponseEntity.ok(AdmissionResponse.fromAdmission(result));
@@ -39,6 +40,7 @@ public class AdmissionController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PaginatedResponse<AdmissionResponse>> getAll(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit,
@@ -51,15 +53,17 @@ public class AdmissionController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AdmissionResponse> getById(@PathVariable String id) {
         AdmissionResult result = admissionService.findById(id);
         return ResponseEntity.ok(AdmissionResponse.fromAdmission(result));
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AdmissionResponse> update(
             @PathVariable String id,
-            @RequestBody AdmissionRequest request) {
+            @Valid @RequestBody AdmissionRequest request) {
         AdmissionResult result = admissionService.update(id, request);
         return ResponseEntity.ok(AdmissionResponse.fromAdmission(result));
     }

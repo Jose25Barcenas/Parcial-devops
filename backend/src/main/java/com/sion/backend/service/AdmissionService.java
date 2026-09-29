@@ -42,6 +42,7 @@ public class AdmissionService {
         result.setDecision(request.getDecision());
         result.setPeriod(request.getPeriod());
         result.setNotes(request.getNotes());
+        result.setEvaluatedAt(LocalDateTime.now());
 
         return admissionResultRepository.save(result);
     }
@@ -52,9 +53,13 @@ public class AdmissionService {
             throw new ResourceNotFoundException("No se encontraron inscripciones");
         }
 
-        Inscription latest = inscriptions.get(0);
-        return admissionResultRepository.findByInscriptionId(latest.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Resultado de admision no encontrado"));
+        for (Inscription inscription : inscriptions) {
+            var result = admissionResultRepository.findByInscriptionId(inscription.getId());
+            if (result.isPresent()) {
+                return result.get();
+            }
+        }
+        throw new ResourceNotFoundException("Resultado de admision no encontrado");
     }
 
     public AdmissionResult findById(String id) {
@@ -63,7 +68,9 @@ public class AdmissionService {
     }
 
     public Page<AdmissionResult> findAll(int page, int limit, String decision) {
-        PageRequest pageRequest = PageRequest.of(page - 1, limit);
+        int safePage = Math.max(1, page);
+        int safeLimit = Math.min(100, Math.max(1, limit));
+        PageRequest pageRequest = PageRequest.of(safePage - 1, safeLimit);
         if (decision != null && !decision.isEmpty()) {
             return admissionResultRepository.findByDecision(decision, pageRequest);
         }

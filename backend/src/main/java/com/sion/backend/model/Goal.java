@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -12,15 +11,14 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "inscriptions")
-public class Inscription {
+@Document(collection = "goals")
+public class Goal {
     @Id
     private String id;
-    @Indexed
-    private String userId;
-    private String program;
-    private String schedule;
-    private String status = "pending";
+    private String key;
+    private String label;
+    private Double target;
+    private String period;
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
 }

@@ -2,7 +2,6 @@ package com.sion.backend.controller;
 
 import com.sion.backend.dto.request.InscriptionRequest;
 import com.sion.backend.dto.response.InscriptionResponse;
-import com.sion.backend.dto.response.MessageResponse;
 import com.sion.backend.dto.response.PaginatedResponse;
 import com.sion.backend.model.Inscription;
 import com.sion.backend.model.User;
@@ -12,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -42,6 +42,7 @@ public class InscriptionController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PaginatedResponse<InscriptionResponse>> getAll(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit,
@@ -54,12 +55,14 @@ public class InscriptionController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<InscriptionResponse> getById(@PathVariable String id) {
         Inscription inscription = inscriptionService.findById(id);
         return ResponseEntity.ok(InscriptionResponse.fromInscription(inscription));
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<InscriptionResponse> updateStatus(
             @PathVariable String id,
             @RequestBody Map<String, String> body) {

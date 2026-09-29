@@ -1,7 +1,7 @@
 package com.sion.backend.service;
 
 import com.sion.backend.exception.ResourceNotFoundException;
-import com.sion.backend.exception.UnauthorizedException;
+import org.springframework.security.access.AccessDeniedException;
 import com.sion.backend.model.AppDocument;
 import com.sion.backend.model.Inscription;
 import com.sion.backend.repository.DocumentRepository;
@@ -57,7 +57,7 @@ public class DocumentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Inscripcion no encontrada"));
 
         if (!inscription.getUserId().equals(userId)) {
-            throw new UnauthorizedException("No autorizado para subir documentos a esta inscripcion");
+            throw new AccessDeniedException("No autorizado para subir documentos a esta inscripcion");
         }
 
         try {
@@ -67,14 +67,14 @@ public class DocumentService {
             }
 
             String filename = System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 9)
-                    + getExtension(file.getOriginalFilename());
+                    + getExtension(file.getOriginalFilename(), file.getContentType());
             Path filePath = uploadPath.resolve(filename);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
             AppDocument doc = new AppDocument();
             doc.setInscriptionId(inscriptionId);
             doc.setDocType(docType);
-            doc.setFileUrl("/uploads/" + filename);
+            doc.setFileUrl("/api/v1/uploads/" + filename);
             doc.setStatus("uploaded");
             doc.setUploadedAt(LocalDateTime.now());
 
@@ -84,10 +84,10 @@ public class DocumentService {
         }
     }
 
-    public List<AppDocument> findByInscriptionId(String inscriptionId) {
-        if (inscriptionRepository.findById(inscriptionId).isEmpty()) {
-            throw new ResourceNotFoundException("Inscripcion no encontrada");
-        }
+    public List<AppDocument> findByInscriptionId(String inscriptionId, String userId, String role) {
+        Inscription inscription = inscriptionRepository.findById(inscriptionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Inscripcion no encontrada"));
+        checkAccess(inscription, userId, role);
         return documentRepository.findByInscriptionIdOrderByUploadedAtDesc(inscriptionId);
     }
 
@@ -96,21 +96,45 @@ public class DocumentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Documento no encontrado"));
     }
 
-    public void delete(String id, String userId) {
+    public AppDocument findById(String id, String userId, String role) {
         AppDocument doc = findById(id);
         Inscription inscription = inscriptionRepository.findById(doc.getInscriptionId())
                 .orElseThrow(() -> new ResourceNotFoundException("Inscripcion no encontrada"));
-
-        if (!inscription.getUserId().equals(userId)) {
-            throw new UnauthorizedException("No autorizado para eliminar este documento");
-        }
-
-        documentRepository.deleteById(id);
+        checkAccess(inscription, userId, role);
+        return doc;
     }
 
-    private String getExtension(String filename) {
-        if (filename == null) return ".bin";
-        int dot = filename.lastIndexOf('.');
-        return dot >= 0 ? filename.substring(dot) : ".bin";
+    private void checkAccess(Inscription inscription, String userId, String role) {
+        if (!inscription.getUserId().equals(userId) && !"admin".equals(role)) {
+            throw new AccessDeniedException("No autorizado para ver los documentos de esta inscripcion");
+        }
+    }
+
+    public void delete(String id, String userId, String role) {
+        AppDocument doc = findById(id);
+        Inscription inscription = inscriptionRepository.findById(doc.getInscriptionId())
+                .orElseThrow(() -> new ResourceNotFoundException("Inscripcion no encontrada"));
+        checkAccess(inscription, userId, role);
+
+        documentRepository.deleteById(id);
+        try {
+            Path filePath = Paths.get(uploadDir).resolve(Paths.get(doc.getFileUrl()).getFileName());
+            Files.deleteIfExists(filePath);
+        } catch (IOException ignored) {
+            // registro eliminado; si el archivo queda huerfano se ignora
+        }
+    }
+
+    private String getExtension(String filename, String contentType) {
+        String ext = "";
+        if (filename != null && filename.lastIndexOf('.') >= 0) {
+            ext = filename.substring(filename.lastIndexOf('.') + 1)
+                    .replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+        }
+        if (List.of("pdf", "png", "jpg", "jpeg").contains(ext)) return "." + ext;
+        if ("application/pdf".equals(contentType)) return ".pdf";
+        if ("image/png".equals(contentType)) return ".png";
+        if ("image/jpeg".equals(contentType)) return ".jpg";
+        return ".bin";
     }
 }

@@ -2,7 +2,6 @@ package com.sion.backend.service;
 
 import com.sion.backend.dto.request.InscriptionRequest;
 import com.sion.backend.dto.response.InscriptionResponse;
-import com.sion.backend.exception.ConflictException;
 import com.sion.backend.exception.ResourceNotFoundException;
 import com.sion.backend.model.Inscription;
 import com.sion.backend.repository.InscriptionRepository;
@@ -61,7 +60,9 @@ public class InscriptionService {
     }
 
     public Page<Inscription> findAll(int page, int limit, String status) {
-        PageRequest pageRequest = PageRequest.of(page - 1, limit);
+        int safePage = Math.max(1, page);
+        int safeLimit = Math.min(100, Math.max(1, limit));
+        PageRequest pageRequest = PageRequest.of(safePage - 1, safeLimit);
         if (status != null && !status.isEmpty()) {
             return inscriptionRepository.findByStatus(status, pageRequest);
         }
