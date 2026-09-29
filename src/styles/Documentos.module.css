@@ -1,65 +1,37 @@
-.pageTitle {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1F2937;
-  margin: 0 0 0.25rem 0;
-}
-
-.pageSubtitle {
-  font-size: 0.875rem;
-  color: #6B7280;
-  margin: 0 0 1.5rem 0;
-}
-
-/* Header with progress */
-.docsHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
 .docsHeaderInfo {
   flex: 1;
 }
-
 .docsHeaderStats {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
-
 .docsCount {
   text-align: center;
 }
-
 .docsCountNumber {
   font-size: 1.5rem;
   font-weight: 700;
   color: white;
 }
-
 .docsCountLabel {
   font-size: 0.75rem;
   color: rgba(255,255,255,0.55);
 }
-
 /* Progress Circle */
 .progressCircle {
   position: relative;
   width: 64px;
   height: 64px;
 }
-
 .progressCircleSvg {
   transform: rotate(-90deg);
 }
-
 .progressCircleBg {
   fill: none;
   stroke: rgba(255,255,255,0.2);
   stroke-width: 3;
 }
-
 .progressCircleFill {
   fill: none;
   stroke: #D6B656;
@@ -67,7 +39,6 @@
   stroke-linecap: round;
   transition: stroke-dasharray 0.5s ease;
 }
-
 .progressCircleText {
   position: absolute;
   inset: 0;
@@ -78,45 +49,6 @@
   font-weight: 700;
   color: white;
 }
-
-/* Correction Alert */
-.correctionAlert {
-  border-radius: 0.75rem;
-  padding: 1rem;
-  margin-bottom: 1.25rem;
-  background: rgba(211,47,47,0.07);
-  border: 1.5px solid #D32F2F;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.correctionAlertContent {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  flex: 1;
-}
-
-.correctionAlertIcon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.correctionAlertTitle {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #D32F2F;
-}
-
-.correctionAlertDesc {
-  font-size: 0.875rem;
-  color: #374151;
-}
-
 /* All Done Banner */
 .allDoneBanner {
   border-radius: 0.75rem;
@@ -129,29 +61,24 @@
   justify-content: space-between;
   animation: slide-in 0.35s ease both;
 }
-
 .allDoneContent {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
-
 .allDoneIcon {
   width: 24px;
   height: 24px;
   flex-shrink: 0;
 }
-
 .allDoneText { font-weight: 700; font-size: 0.875rem; color: #4B7F52; }
 .allDoneDesc { font-size: 0.75rem; color: #6b7280; }
-
 /* Docs List */
 .docsList {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
-
 .docCard {
   background: white;
   border-radius: 1rem;
@@ -162,7 +89,6 @@
   align-items: flex-start;
   gap: 1rem;
 }
-
 .docIcon {
   width: 40px;
   height: 40px;
@@ -173,14 +99,9 @@
   flex-shrink: 0;
   margin-top: 2px;
 }
-
 .docIconPending { background: #f3f4f6; }
-.docIconReviewing { background: rgba(214,182,86,0.12); }
 .docIconApproved { background: rgba(75,127,82,0.1); }
-.docIconRejected { background: rgba(211,47,47,0.08); }
-
 .docInfo { flex: 1; min-width: 0; }
-
 .docHeader {
   display: flex;
   align-items: center;
@@ -188,39 +109,12 @@
   flex-wrap: wrap;
   margin-bottom: 0.125rem;
 }
-
 .docLabel { 
   font-weight: 700; 
   font-size: 0.875rem; 
   color: #1F2937; 
 }
-
 .docStatus { font-size: 0.75rem; color: #9CA3AF; margin-top: 0.125rem; }
-
-.docMeta {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  margin-top: 0.25rem;
-}
-
-.docMetaIcon {
-  width: 12px;
-  height: 12px;
-}
-
-.docRejection {
-  font-size: 0.75rem;
-  margin-top: 0.375rem;
-  padding: 0.375rem 0.625rem;
-  border-radius: 0.5rem;
-  display: inline-block;
-  color: #D32F2F;
-  background: rgba(211,47,47,0.06);
-}
-
 .docActions {
   display: flex;
   align-items: center;
@@ -228,7 +122,6 @@
   flex-shrink: 0;
   margin-top: 2px;
 }
-
 /* Badge */
 .docBadge {
   font-size: 0.75rem;
@@ -236,23 +129,11 @@
   padding: 0.25rem 0.625rem;
   border-radius: 9999px;
 }
-
 .docBadgePending {
   background: #f3f4f6;
   color: #9ca3af;
 }
-
-.docBadgeReviewing {
-  background: rgba(214,182,86,0.12);
-  color: #D6B656;
-}
-
 .docBadgeApproved {
   background: rgba(75,127,82,0.1);
   color: #4B7F52;
-}
-
-.docBadgeRejected {
-  background: rgba(211,47,47,0.08);
-  color: #D32F2F;
 }

@@ -1,31 +1,59 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { authService } from '../services/authService';
+import { getStoredToken, getStoredUser, clearSession, storeSession } from '../services/api';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
+  const [token, setToken] = useState(getStoredToken);
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !!getStoredToken());
 
   useEffect(() => {
-    if (token) {
-      const stored = localStorage.getItem('user');
-      if (stored) {
-        try {
-          setUser(JSON.parse(stored));
-        } catch {
-          localStorage.removeItem('user');
+    if (!token) return undefined;
+    let cancelled = false;
+
+    async function boot() {
+      try {
+        const me = await authService.me();
+        if (cancelled) return;
+        if (!me || !me.email) throw new Error('Perfil invalido');
+        setUser(me);
+        const remembered = (() => {
+          try { return !!localStorage.getItem('token'); } catch { return true; }
+        })();
+        storeSession(token, me, remembered);
+      } catch (err) {
+        if (cancelled) return;
+        if (err.status === 401 || err.status === 403) {
+          clearSession();
+          setToken(null);
+          setUser(null);
+        } else {
+          const stored = getStoredUser();
+          try {
+            setUser(stored ? JSON.parse(stored) : null);
+          } catch {
+            clearSession();
+            setToken(null);
+            setUser(null);
+          }
         }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
-    setLoading(false);
+
+    boot();
+    return () => { cancelled = true; };
   }, [token]);
 
-  const login = async (email, password) => {
+  const login = async (email, password, remember = true) => {
     const res = await authService.login(email, password);
-    localStorage.setItem('token', res.token);
-    localStorage.setItem('user', JSON.stringify(res.user));
+    if (!res || !res.token || !res.user) {
+      throw new Error('Respuesta invalida del servidor');
+    }
+    storeSession(res.token, res.user, remember);
     setToken(res.token);
     setUser(res.user);
     return res;
@@ -37,17 +65,17 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    clearSession();
     setToken(null);
     setUser(null);
   };
 
-  return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({ user, token, loading, login, register, logout }),
+    [user, token, loading]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => useContext(AuthContext);

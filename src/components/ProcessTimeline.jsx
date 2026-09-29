@@ -15,21 +15,24 @@ export function ProcessFlowDiagram() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let cancelled = false
     async function loadData() {
       try {
         const [counts, avgs] = await Promise.all([
           analyticsService.getProcessesByStage(),
           analyticsService.getStageAverages(),
         ])
-        setProcessCounts(counts)
-        setStageAvgs(avgs)
+        if (cancelled) return
+        setProcessCounts(counts || {})
+        setStageAvgs(avgs || {})
       } catch (error) {
         console.error('Error loading process flow:', error)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
     loadData()
+    return () => { cancelled = true }
   }, [])
 
   const stages = ['inscription', 'payment', 'documents', 'admission']
@@ -87,17 +90,20 @@ export function ProcessTable() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let cancelled = false
     async function loadData() {
       try {
         const data = await analyticsService.getTimeline()
-        setTimeline(data)
+        if (cancelled) return
+        setTimeline(Array.isArray(data) ? data : [])
       } catch (error) {
         console.error('Error loading timeline:', error)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
     loadData()
+    return () => { cancelled = true }
   }, [])
 
   const stageLabels = {

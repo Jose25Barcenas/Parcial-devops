@@ -1,14 +1,53 @@
 const API_BASE = '/api/v1';
 
+export function getStoredToken() {
+  try {
+    return localStorage.getItem('token') || sessionStorage.getItem('token');
+  } catch {
+    return null;
+  }
+}
+
+export function getStoredUser() {
+  try {
+    return localStorage.getItem('user') || sessionStorage.getItem('user');
+  } catch {
+    return null;
+  }
+}
+
+export function storeSession(token, user, remember = true) {
+  clearSession();
+  try {
+    const store = remember ? localStorage : sessionStorage;
+    store.setItem('token', token);
+    store.setItem('user', JSON.stringify(user));
+  } catch {
+    // almacenamiento no disponible (modo privado/cuota): la sesion vive en memoria
+  }
+}
+
+export function clearSession() {
+  try {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+  } catch {
+    // almacenamiento no disponible
+  }
+}
+
 async function request(endpoint, options = {}) {
-  const token = localStorage.getItem('token');
+  const token = getStoredToken();
+  const { headers: optionHeaders, ...rest } = options;
   const config = {
+    ...rest,
     headers: {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
+      ...optionHeaders,
     },
-    ...options,
   };
 
   // Remove Content-Type for FormData (browser sets it automatically with boundary)
@@ -16,22 +55,42 @@ async function request(endpoint, options = {}) {
     delete config.headers['Content-Type'];
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, config);
+  let response;
+  try {
+    response = await fetch(`${API_BASE}${endpoint}`, config);
+  } catch {
+    throw new Error('Error de conexion con el servidor');
+  }
 
   if (response.status === 401) {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/';
-    throw new Error('Sesion expirada');
+    if (token) {
+      clearSession();
+      window.location.href = '/';
+      throw new Error('Sesion expirada');
+    }
+    const error = await response.json().catch(() => ({}));
+    const err = new Error(error.message || 'Credenciales invalidas');
+    err.status = 401;
+    throw err;
   }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || 'Error del servidor');
+    const firstFieldError = error.errors ? Object.values(error.errors)[0] : null;
+    const err = new Error(error.message || firstFieldError || 'Error del servidor');
+    err.status = response.status;
+    err.errors = error.errors;
+    throw err;
   }
 
   if (response.status === 204) return null;
-  return response.json();
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
 }
 
 export const api = {
@@ -41,4 +100,5 @@ export const api = {
   patch: (url, data) => request(url, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (url) => request(url, { method: 'DELETE' }),
   upload: (url, formData) => request(url, { method: 'POST', body: formData }),
+  uploadPatch: (url, formData) => request(url, { method: 'PATCH', body: formData }),
 };

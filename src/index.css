@@ -29,7 +29,3 @@ input[type="file"] { cursor: pointer; }
   50% { opacity: 0.4; }
 }
 
-@keyframes confetti-fall {
-  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(80px) rotate(360deg); opacity: 0; }
-}

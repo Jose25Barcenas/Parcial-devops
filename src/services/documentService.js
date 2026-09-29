@@ -9,6 +9,4 @@ export const documentService = {
     return api.upload('/documents/upload', formData);
   },
   getByInscription: (inscriptionId) => api.get(`/documents/${inscriptionId}`),
-  getById: (id) => api.get(`/documents/doc/${id}`),
-  delete: (id) => api.delete(`/documents/${id}`),
 };

@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef, createContext, useContext } from 'react'
+import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react'
 import { useAuth } from './context/AuthContext.jsx'
+import { authService } from './services/authService.js'
 import { inscriptionService } from './services/inscriptionService.js'
 import { paymentService } from './services/paymentService.js'
 import { documentService } from './services/documentService.js'
 import { admissionService } from './services/admissionService.js'
 import DashboardAdmin from './components/DashboardAdmin.jsx'
-import { MetricsWidget, ProcessFlowWidget } from './components/MetricsWidget.jsx'
+import { ProcessFlowWidget } from './components/ProcessFlowWidget.jsx'
 import styles from './styles/Components.module.css'
 import authStyles from './styles/Auth.module.css'
 import layoutStyles from './styles/Layout.module.css'
@@ -28,6 +29,23 @@ const PROGRAMS = [
 
 const SCHEDULES = ['Diurna', 'Nocturna', 'Fines de Semana']
 
+const DOC_TYPES = [
+  { id: 'identity', label: 'Documento de Identidad', desc: 'Cedula de ciudadania, tarjeta de identidad o cedula de extranjeria vigente.' },
+  { id: 'icfes', label: 'Resultados ICFES / Pruebas de Estado', desc: 'Resultado oficial de las Pruebas Saber 11 emitido por el ICFES.' },
+  { id: 'diploma', label: 'Titulo o Diploma de Bachiller', desc: 'Diploma original o copia autenticada del titulo de bachillerato.' },
+  { id: 'acta', label: 'Acta de Grado', desc: 'Acta de grado de bachillerato emitida por la institucion educativa.' },
+  { id: 'adicional', label: 'Documento Academico Adicional', desc: 'Certificado de notas de 10° y 11° o documento academico complementario.' },
+]
+const DOC_TYPE_COUNT = DOC_TYPES.length
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ))
+}
+
 const AppContext = createContext()
 
 function useApp() {
@@ -43,11 +61,11 @@ function Badge({ color, bg, dot = false, children }) {
   )
 }
 
-function Btn({ children, onClick, type = 'button', variant = 'primary', size = 'md', disabled = false, fullWidth = false, icon }) {
+function Btn({ children, onClick, type = 'button', variant = 'primary', size = 'md', disabled = false, fullWidth = false, icon, style }) {
   const sizeClass = size === 'sm' ? styles.btnSm : size === 'lg' ? styles.btnLg : size === 'xl' ? styles.btnXl : styles.btnMd
   const variantClass = variant === 'secondary' ? styles.btnSecondary : variant === 'ghost' ? styles.btnGhost : variant === 'danger' ? styles.btnDanger : variant === 'success' ? styles.btnSuccess : styles.btnPrimary
   return (
-    <button type={type} onClick={onClick} disabled={disabled}
+    <button type={type} onClick={onClick} disabled={disabled} style={style}
       className={`${styles.btn} ${sizeClass} ${variantClass} ${fullWidth ? styles.btnFullWidth : ''}`}>
       {icon && <span style={{ flexShrink: 0 }}>{icon}</span>}
       {children}
@@ -55,8 +73,8 @@ function Btn({ children, onClick, type = 'button', variant = 'primary', size = '
   )
 }
 
-function Card({ children, className = '' }) {
-  return <div className={`${layoutStyles.card} ${className}`}>{children}</div>
+function Card({ children, className = '', style }) {
+  return <div className={`${layoutStyles.card} ${className}`} style={style}>{children}</div>
 }
 
 function SecLabel({ n, label }) {
@@ -68,19 +86,19 @@ function SecLabel({ n, label }) {
   )
 }
 
-function Field({ label, type = 'text', placeholder, value, onChange, required = false, options, id, span = 1, disabled = false }) {
-  const fieldId = id || label?.toLowerCase().replace(/\s+/g, '-')
+function Field({ label, type = 'text', placeholder, value, onChange, onBlur, required = false, options }) {
+  const fieldId = label?.toLowerCase().replace(/\s+/g, '-')
   return (
-    <div className={span === 2 ? inscripcionStyles.formGridFull : ''}>
+    <div>
       <label htmlFor={fieldId} className={styles.fieldLabel}>
         {label}{required && <span className={styles.fieldRequired}> *</span>}
       </label>
       {options
-        ? <select id={fieldId} value={value} onChange={e => onChange?.(e.target.value)} className={styles.fieldSelect} disabled={disabled}>
+        ? <select id={fieldId} value={value} onChange={e => onChange?.(e.target.value)} onBlur={onBlur} className={styles.fieldSelect}>
             <option value="">Seleccionar...</option>
             {options.map(o => <option key={o}>{o}</option>)}
           </select>
-        : <input id={fieldId} type={type} placeholder={placeholder} value={value} onChange={e => onChange?.(e.target.value)} className={styles.fieldInput} disabled={disabled} />}
+        : <input id={fieldId} type={type} placeholder={placeholder} value={value} onChange={e => onChange?.(e.target.value)} onBlur={onBlur} className={styles.fieldInput} />}
     </div>
   )
 }
@@ -91,9 +109,11 @@ function AuthCard({ title, onClose, children }) {
       <div className={`${authStyles.authCard} animate-slide-in`}>
         <div className={authStyles.authHeader}>
           <h3 className={authStyles.authTitle}>{title}</h3>
-          <button onClick={onClose} className={authStyles.authCloseBtn}>
-            <svg className={authStyles.authCloseIcon} fill="currentColor" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
-          </button>
+          {onClose && (
+            <button onClick={onClose} className={authStyles.authCloseBtn}>
+              <svg className={authStyles.authCloseIcon} fill="currentColor" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
+            </button>
+          )}
         </div>
         {children}
       </div>
@@ -101,11 +121,11 @@ function AuthCard({ title, onClose, children }) {
   )
 }
 
-function ScreenLayout({ children, hero, noPadding }) {
+function ScreenLayout({ children, hero }) {
   return (
     <div className={layoutStyles.screenLayout}>
       {hero}
-      <div className={`${layoutStyles.screenContent} ${noPadding ? 'animate-slide-in' : 'animate-slide-in'}`}>
+      <div className={`${layoutStyles.screenContent} animate-slide-in`}>
         {children}
       </div>
     </div>
@@ -210,15 +230,17 @@ function SideProgress({ stage }) {
 }
 
 function LoginScreen() {
-  const [showRegister, setShowRegister] = useState(false)
-  if (showRegister) return <RegisterForm onBack={() => setShowRegister(false)} />
-  return <LoginForm onShowRegister={() => setShowRegister(true)} />
+  const [view, setView] = useState('login')
+  if (view === 'register') return <RegisterForm onBack={() => setView('login')} />
+  if (view === 'forgot') return <ForgotPasswordForm onBack={() => setView('login')} />
+  return <LoginForm onShowRegister={() => setView('register')} onForgot={() => setView('forgot')} />
 }
 
-function LoginForm({ onShowRegister }) {
+function LoginForm({ onShowRegister, onForgot }) {
   const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [remember, setRemember] = useState(true)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -227,7 +249,7 @@ function LoginForm({ onShowRegister }) {
     setError('')
     setLoading(true)
     try {
-      await login(email, password)
+      await login(email, password, remember)
     } catch (err) {
       setError(err.message || 'Credenciales invalidas')
     } finally {
@@ -236,12 +258,19 @@ function LoginForm({ onShowRegister }) {
   }
 
   return (
-    <AuthCard title="Iniciar Sesion" onClose={() => {}}>
+    <AuthCard title="Iniciar Sesion">
       <form onSubmit={handleSubmit}>
         <div className={authStyles.authForm}>
           {error && <p className={authStyles.authError}>{error}</p>}
           <Field label="Correo electronico" type="email" placeholder="jose.barcenas@correo.com" value={email} onChange={setEmail} required />
           <Field label="Contrasena" type="password" placeholder="********" value={password} onChange={setPassword} required />
+          <div className={authStyles.authRememberRow}>
+            <label className={authStyles.authRememberLabel}>
+              <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} className={authStyles.authRememberCheckbox} />
+              <span className={authStyles.authHint}>Recordarme</span>
+            </label>
+            <button type="button" onClick={onForgot} className={`${authStyles.authSwitchBtn} ${authStyles.authForgotLink}`}>Olvidaste tu contrasena?</button>
+          </div>
           <Btn type="submit" fullWidth size="lg" disabled={loading}>
             {loading ? 'Iniciando...' : 'Iniciar Sesion'}
           </Btn>
@@ -255,25 +284,181 @@ function LoginForm({ onShowRegister }) {
   )
 }
 
+function ForgotPasswordForm({ onBack }) {
+  const [step, setStep] = useState('email')
+  const [email, setEmail] = useState('')
+  const [demoCode, setDemoCode] = useState('')
+  const [code, setCode] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleSend(e) {
+    e.preventDefault()
+    setError('')
+    if (!email.trim()) {
+      setError('Correo requerido')
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Correo invalido')
+      return
+    }
+    setLoading(true)
+    try {
+      const res = await authService.forgotPassword(email)
+      setDemoCode(res.demoCode || '')
+      setStep('code')
+    } catch (err) {
+      setError(err.message || 'Error al solicitar el codigo')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleReset(e) {
+    e.preventDefault()
+    setError('')
+    if (!code.trim()) {
+      setError('Codigo requerido')
+      return
+    }
+    if (password.length < 6) {
+      setError('La contrasena debe tener minimo 6 caracteres')
+      return
+    }
+    if (password !== confirm) {
+      setError('Las contrasenas no coinciden')
+      return
+    }
+    setLoading(true)
+    try {
+      await authService.resetPassword(email, code.trim(), password)
+      setStep('done')
+    } catch (err) {
+      setError(err.message || 'Error al restablecer la contrasena')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (step === 'done') {
+    return (
+      <AuthCard title="Contrasena Restablecida" onClose={onBack}>
+        <div className={authStyles.authForm}>
+          <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
+            <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(75,127,82,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+              <svg width="24" height="24" fill="#4B7F52" viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" /></svg>
+            </div>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', marginBottom: '0.5rem' }}>Contrasena actualizada</h3>
+            <p style={{ fontSize: '0.875rem', color: '#6B7280', marginBottom: '1.5rem' }}>Tu contrasena fue restablecida. Ahora puedes iniciar sesion.</p>
+            <Btn fullWidth size="lg" onClick={onBack}>Ir a Iniciar Sesion</Btn>
+          </div>
+        </div>
+      </AuthCard>
+    )
+  }
+
+  return (
+    <AuthCard title="Recuperar Contrasena" onClose={onBack}>
+      {step === 'email' && (
+        <form onSubmit={handleSend}>
+          <div className={authStyles.authForm}>
+            {error && <p className={authStyles.authError}>{error}</p>}
+            <p style={{ fontSize: '0.875rem', color: '#4B5563', margin: 0 }}>Escribe tu correo y te enviaremos un codigo para restablecer tu contrasena.</p>
+            <Field label="Correo electronico" type="email" placeholder="jose.barcenas@correo.com" value={email} onChange={setEmail} required />
+            <Btn type="submit" fullWidth size="lg" disabled={loading}>
+              {loading ? 'Enviando codigo...' : 'Enviar codigo'}
+            </Btn>
+            <div className={authStyles.authSwitchText}>
+              <button type="button" onClick={onBack} className={authStyles.authSwitchBtn}>Volver a iniciar sesion</button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {step === 'code' && (
+        <form onSubmit={handleReset}>
+          <div className={authStyles.authForm}>
+            {error && <p className={authStyles.authError}>{error}</p>}
+            {demoCode ? (
+              <div style={{ padding: '0.75rem 1rem', background: '#FFF8E7', border: '1px solid #F0E0B0', borderRadius: '0.5rem', fontSize: '0.8125rem', color: '#8A6D1A' }}>
+                Modo demostracion: tu codigo de recuperacion es <strong>{demoCode}</strong> (vence en 10 minutos).
+              </div>
+            ) : (
+              <p style={{ fontSize: '0.875rem', color: '#4B5563', margin: 0 }}>Si el correo existe en el sistema, recibiras un codigo de recuperacion.</p>
+            )}
+            <Field label="Codigo de recuperacion" placeholder="123456" value={code} onChange={setCode} required />
+            <Field label="Nueva contrasena" type="password" placeholder="********" value={password} onChange={setPassword} required />
+            <p className={authStyles.authHint}>Minimo 6 caracteres</p>
+            <Field label="Confirmar contrasena" type="password" placeholder="********" value={confirm} onChange={setConfirm} required />
+            <Btn type="submit" fullWidth size="lg" disabled={loading}>
+              {loading ? 'Restableciendo...' : 'Restablecer contrasena'}
+            </Btn>
+            <div className={authStyles.authSwitchText}>
+              <button type="button" onClick={onBack} className={authStyles.authSwitchBtn}>Volver a iniciar sesion</button>
+            </div>
+          </div>
+        </form>
+      )}
+    </AuthCard>
+  )
+}
+
+const REGISTER_VALIDATORS = {
+  fullName: v => (!v || !v.trim() ? 'Nombre requerido' : undefined),
+  email: v => (!v || !v.trim() ? 'Correo requerido' : (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) ? 'Correo invalido' : undefined)),
+  phone: v => (!v || !v.trim() ? 'Telefono requerido' : (!/^[0-9\s+()-]{7,15}$/.test(v.trim()) ? 'Telefono invalido' : undefined)),
+  password: v => (!v ? 'Contrasena requerida' : (v.length < 6 ? 'Minimo 6 caracteres' : undefined)),
+  terms: v => (!v ? 'Debe aceptar terminos' : undefined),
+}
+
 function RegisterForm({ onBack }) {
   const { register } = useAuth()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [accepted, setAccepted] = useState(false)
   const [errors, setErrors] = useState({})
+  const [touched, setTouched] = useState({})
   const [apiError, setApiError] = useState('')
   const [loading, setLoading] = useState(false)
   const [registered, setRegistered] = useState(false)
 
+  const values = { fullName, email, phone, password, terms: accepted }
+
+  function setErrorFor(name, err) {
+    setErrors(prev => {
+      const next = { ...prev }
+      if (err) next[name] = err
+      else delete next[name]
+      return next
+    })
+  }
+
+  function handleFieldChange(name, value, setter) {
+    setter(value)
+    if (touched[name]) setErrorFor(name, REGISTER_VALIDATORS[name](value))
+  }
+
+  function handleTermsChange(checked) {
+    setAccepted(checked)
+    if (touched.terms) setErrorFor('terms', REGISTER_VALIDATORS.terms(checked))
+  }
+
+  function handleBlur(name) {
+    setTouched(prev => (prev[name] ? prev : { ...prev, [name]: true }))
+    setErrorFor(name, REGISTER_VALIDATORS[name](values[name]))
+  }
+
   function validate() {
     const newErrors = {}
-    if (!fullName.trim()) newErrors.fullName = 'Nombre requerido'
-    if (!email.trim()) newErrors.email = 'Correo requerido'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'Correo invalido'
-    if (!password) newErrors.password = 'Contrasena requerida'
-    else if (password.length < 6) newErrors.password = 'Minimo 6 caracteres'
-    if (!accepted) newErrors.terms = 'Debe aceptar terminos'
+    Object.entries(REGISTER_VALIDATORS).forEach(([name, fn]) => {
+      const err = fn(values[name])
+      if (err) newErrors[name] = err
+    })
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -281,10 +466,11 @@ function RegisterForm({ onBack }) {
   async function handleSubmit(e) {
     e.preventDefault()
     setApiError('')
+    setTouched({ fullName: true, email: true, phone: true, password: true, terms: true })
     if (!validate()) return
     setLoading(true)
     try {
-      await register({ fullName, email, password })
+      await register({ fullName, email, phone: phone.trim(), password })
       setRegistered(true)
     } catch (err) {
       setApiError(err.message || 'Error al crear cuenta')
@@ -316,21 +502,25 @@ function RegisterForm({ onBack }) {
         <div className={authStyles.authForm}>
           {apiError && <p className={authStyles.authError}>{apiError}</p>}
           <div>
-            <Field label="Nombre completo" placeholder="Jose Barcenas" value={fullName} onChange={setFullName} required />
+            <Field label="Nombre completo" placeholder="Jose Barcenas" value={fullName} onChange={v => handleFieldChange('fullName', v, setFullName)} onBlur={() => handleBlur('fullName')} required />
             {errors.fullName && <p className={authStyles.authError}>{errors.fullName}</p>}
           </div>
           <div>
-            <Field label="Correo electronico" type="email" placeholder="jose.barcenas@correo.com" value={email} onChange={setEmail} required />
+            <Field label="Correo electronico" type="email" placeholder="jose.barcenas@correo.com" value={email} onChange={v => handleFieldChange('email', v, setEmail)} onBlur={() => handleBlur('email')} required />
             {errors.email && <p className={authStyles.authError}>{errors.email}</p>}
           </div>
           <div>
-            <Field label="Contrasena" type="password" placeholder="********" value={password} onChange={setPassword} required />
+            <Field label="Telefono" placeholder="300 123 4567" value={phone} onChange={v => handleFieldChange('phone', v, setPhone)} onBlur={() => handleBlur('phone')} required />
+            {errors.phone && <p className={authStyles.authError}>{errors.phone}</p>}
+          </div>
+          <div>
+            <Field label="Contrasena" type="password" placeholder="********" value={password} onChange={v => handleFieldChange('password', v, setPassword)} onBlur={() => handleBlur('password')} required />
             {errors.password && <p className={authStyles.authError}>{errors.password}</p>}
             <p className={authStyles.authHint}>Minimo 6 caracteres</p>
           </div>
           <div>
             <label className={authStyles.authRememberLabel}>
-              <input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} className={styles.checkbox} />
+              <input type="checkbox" checked={accepted} onChange={e => handleTermsChange(e.target.checked)} onBlur={() => handleBlur('terms')} className={styles.checkbox} />
               <span className={authStyles.authHint}>Acepto los terminos y condiciones</span>
             </label>
             {errors.terms && <p className={authStyles.authError}>{errors.terms}</p>}
@@ -348,7 +538,7 @@ function RegisterForm({ onBack }) {
   )
 }
 
-function AppHeader({ onLogout, onDashboard }) {
+function AppHeader({ onLogout, onDashboard, isAdmin }) {
   const { screen, setScreen, currentStep } = useApp()
   const idx = STEPS.findIndex(s => s.id === screen)
 
@@ -365,10 +555,12 @@ function AppHeader({ onLogout, onDashboard }) {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <button onClick={onDashboard} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.875rem', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: '0.8125rem', cursor: 'pointer' }}>
-            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" /></svg>
-            Dashboard BPM
-          </button>
+          {isAdmin && (
+            <button onClick={onDashboard} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.875rem', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: '0.8125rem', cursor: 'pointer' }}>
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" /></svg>
+              Dashboard BPM
+            </button>
+          )}
           <button onClick={onLogout} className={layoutStyles.headerLogout}>
             <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M17 7l-1.4 1.4L18.2 11H8v2h10.2l-2.6 2.6L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" /></svg>
             Cerrar sesion
@@ -406,21 +598,20 @@ function ScreenInscripcion() {
   const [telefono, setTelefono] = useState('')
   const [programa, setPrograma] = useState('')
   const [jornada, setJornada] = useState('')
-  const [modalidad, setModalidad] = useState('')
   const [accepted, setAccepted] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [errors, setErrors] = useState({})
   const [apiError, setApiError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
-  const [inscriptionNum] = useState(() => `INS-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 99999)).padStart(5, '0')}`)
+  const [inscriptionNum, setInscriptionNum] = useState('')
 
   function validate() {
     const newErrors = {}
     if (!nombre.trim()) newErrors.nombre = 'Nombre requerido'
     if (!apellido.trim()) newErrors.apellido = 'Apellido requerido'
     if (!email.trim()) newErrors.email = 'Correo requerido'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'Correo invalido'
+    else if (!EMAIL_REGEX.test(email)) newErrors.email = 'Correo invalido'
     if (!telefono.trim()) newErrors.telefono = 'Telefono requerido'
     if (!programa) newErrors.programa = 'Programa requerido'
     if (!jornada) newErrors.jornada = 'Jornada requerida'
@@ -434,7 +625,8 @@ function ScreenInscripcion() {
     if (!validate()) return
     setLoading(true)
     try {
-      await inscriptionService.create({ program: programa, schedule: jornada })
+      const created = await inscriptionService.create({ program: programa, schedule: jornada })
+      setInscriptionNum(created?.id || '')
       setFormData({ nombre, apellido, email, telefono, programa, jornada })
       setSubmitted(true)
       setCurrentStep(1)
@@ -533,7 +725,6 @@ function ScreenInscripcion() {
                   {errors.jornada && <p className={inscripcionStyles.formError}>{errors.jornada}</p>}
                 </div>
                 <div className={inscripcionStyles.formGroup}>
-                  <Field label="Modalidad" options={['Presencial', 'Virtual', 'Hibrida']} value={modalidad} onChange={setModalidad} required />
                 </div>
               </div>
               {programa && (
@@ -563,7 +754,6 @@ function ScreenInscripcion() {
               </label>
               {errors.terms && <p className={inscripcionStyles.formError}>{errors.terms}</p>}
               <div className={inscripcionStyles.formActions}>
-                <Btn variant="ghost">Cancelar</Btn>
                 <Btn size="lg" disabled={!accepted || loading} onClick={handleSubmit}
                   icon={<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>}>
                   {loading ? 'Guardando...' : 'Guardar y continuar'}
@@ -647,10 +837,16 @@ function ScreenPago() {
   const [selectedInscription, setSelectedInscription] = useState(null)
   const fileRef = useRef(null)
   const [comprobante, setComprobante] = useState(null)
-  const [receiptNum] = useState(() => `INS-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 99999)).padStart(5, '0')}`)
+  const [receiptNum] = useState(() => `REC-${Date.now().toString(36).toUpperCase()}`)
+  const [receiptDates] = useState(() => {
+    const now = Date.now()
+    const fmt = ts => new Date(ts).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
+    return { issued: fmt(now), due: fmt(now + 7 * 24 * 60 * 60 * 1000) }
+  })
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [paymentData, setPaymentData] = useState({ docType: 'CC', docNumber: '', bank: '', phone: '' })
+  const [paymentData, setPaymentData] = useState({ docNumber: '', bank: '' })
   const [paymentProcessing, setPaymentProcessing] = useState(false)
+  const [existingPayment, setExistingPayment] = useState(null)
 
   const methods = [
     { id: 'pse', icon: '🏦', label: 'PSE', desc: 'Pago en linea', actor: 'Entidad Financiera' },
@@ -669,6 +865,7 @@ function ScreenPago() {
     const metodo = method ? methods.find(m => m.id === method)?.label || method : 'Por seleccionar'
 
     const printWindow = window.open('', '_blank')
+    if (!printWindow) return
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -698,16 +895,16 @@ function ScreenPago() {
         <div class="header">
           <p class="uni-name">Corporacion Universitaria Adventista</p>
           <h1 class="receipt-title">Recibo de Inscripcion</h1>
-          <p class="receipt-number">No. <strong>${receiptNum}</strong></p>
+          <p class="receipt-number">No. <strong>${escapeHtml(receiptNum)}</strong></p>
           <span class="badge">Pago pendiente</span>
         </div>
         <div class="info-grid">
-          <div class="info-item"><div class="info-label">Aspirante</div><div class="info-value">${aspirante}</div></div>
-          <div class="info-item"><div class="info-label">Correo</div><div class="info-value">${user?.email || ''}</div></div>
-          <div class="info-item"><div class="info-label">Programa</div><div class="info-value">${programa}</div></div>
-          <div class="info-item"><div class="info-label">Periodo</div><div class="info-value">${periodo}</div></div>
+          <div class="info-item"><div class="info-label">Aspirante</div><div class="info-value">${escapeHtml(aspirante)}</div></div>
+          <div class="info-item"><div class="info-label">Correo</div><div class="info-value">${escapeHtml(user?.email || '')}</div></div>
+          <div class="info-item"><div class="info-label">Programa</div><div class="info-value">${escapeHtml(programa)}</div></div>
+          <div class="info-item"><div class="info-label">Periodo</div><div class="info-value">${escapeHtml(periodo)}</div></div>
           <div class="info-item"><div class="info-label">Concepto</div><div class="info-value">Derecho de Inscripcion</div></div>
-          <div class="info-item"><div class="info-label">Metodo de pago</div><div class="info-value">${metodo}</div></div>
+          <div class="info-item"><div class="info-label">Metodo de pago</div><div class="info-value">${escapeHtml(metodo)}</div></div>
         </div>
         <div class="amount-box">
           <div class="amount-label">Valor a Pagar</div>
@@ -737,18 +934,46 @@ function ScreenPago() {
     { label: 'Acceso a documentos', done: paid },
   ]
 
+  const checkExistingPayment = useCallback(async (inscriptionId) => {
+    try {
+      const payment = await paymentService.getByInscription(inscriptionId)
+      setExistingPayment(payment)
+      if (payment?.status === 'completed') {
+        setPaid(true)
+        setCurrentStep(2)
+      }
+    } catch {
+      setExistingPayment(null)
+    }
+  }, [setCurrentStep])
+
   useEffect(() => {
+    let cancelled = false
     async function loadInscriptions() {
       try {
         const data = await inscriptionService.getMy()
-        setInscriptions(data)
-        if (data.length > 0) setSelectedInscription(data[0].id)
+        if (cancelled) return
+        const list = Array.isArray(data) ? data : []
+        setInscriptions(list)
+        if (list.length > 0) {
+          setSelectedInscription(list[0].id)
+          await checkExistingPayment(list[0].id)
+        }
       } catch (err) {
-        setError(err.message)
+        if (!cancelled) setError(err.message || 'Error al cargar inscripciones')
       }
     }
     loadInscriptions()
-  }, [])
+    return () => { cancelled = true }
+  }, [checkExistingPayment])
+
+  async function handleInscriptionSelect(e) {
+    const id = e.target.value
+    setSelectedInscription(id)
+    setPaid(false)
+    setExistingPayment(null)
+    await checkExistingPayment(id)
+  }
 
   async function handlePayment() {
     if (!selectedInscription || !method) return
@@ -759,9 +984,12 @@ function ScreenPago() {
     setLoading(true)
     setError('')
     try {
-      const payment = await paymentService.create({ inscriptionId: selectedInscription, method })
+      const payment = existingPayment || await paymentService.create({ inscriptionId: selectedInscription, method })
       if (comprobante?.file && payment?.id) {
         await paymentService.uploadReceipt(payment.id, comprobante.file)
+      }
+      if (payment?.id && payment.status !== 'completed') {
+        await paymentService.confirm(payment.id, `TXN-${method.toUpperCase()}-${Date.now()}`)
       }
       setPaid(true)
       setCurrentStep(2)
@@ -775,9 +1003,13 @@ function ScreenPago() {
   async function handleConfirmOnlinePayment() {
     if (!paymentData.docNumber || !paymentData.bank) return
     setPaymentProcessing(true)
+    setError('')
     try {
-      const payment = await paymentService.create({ inscriptionId: selectedInscription, method })
+      const payment = existingPayment || await paymentService.create({ inscriptionId: selectedInscription, method })
       await new Promise(r => setTimeout(r, 2000))
+      if (payment?.id && payment.status !== 'completed') {
+        await paymentService.confirm(payment.id, `TXN-${method.toUpperCase()}-${Date.now()}`)
+      }
       setPaid(true)
       setCurrentStep(2)
       setShowPaymentModal(false)
@@ -813,10 +1045,17 @@ function ScreenPago() {
     <ScreenLayout hero={hero}>
       {error && <ErrorMessage message={error} />}
 
+      {inscriptions.length === 0 && (
+        <div style={{ padding: '1rem', background: '#FFF8E7', borderRadius: '0.75rem', border: '1px solid #F0E0B0', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          <p style={{ color: '#8A6D1A', fontSize: '0.875rem', margin: 0 }}>No tienes inscripciones registradas. Crea tu inscripcion primero para poder pagar.</p>
+          <Btn size="sm" variant="secondary" onClick={() => setScreen('inscripcion')}>Ir a Inscripcion</Btn>
+        </div>
+      )}
+
       {inscriptions.length > 0 && (
         <div style={{ marginBottom: '1.25rem' }}>
           <label className={styles.fieldLabel}>Selecciona inscripcion</label>
-          <select value={selectedInscription || ''} onChange={e => setSelectedInscription(e.target.value)} className={styles.fieldSelect}>
+          <select value={selectedInscription || ''} onChange={handleInscriptionSelect} className={styles.fieldSelect}>
             {inscriptions.map(ins => (
               <option key={ins.id} value={ins.id}>{ins.program} - {ins.schedule}</option>
             ))}
@@ -838,11 +1077,11 @@ function ScreenPago() {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <Badge color="#D6B656" bg="rgba(214,182,86,0.15)">Pago pendiente</Badge>
-                  <div className={pagoStyles.receiptDate}>Emitido: {new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })} · Vence: {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                  <div className={pagoStyles.receiptDate}>Emitido: {receiptDates.issued} · Vence: {receiptDates.due}</div>
                 </div>
               </div>
               <div className={pagoStyles.receiptInfo}>
-                {[['Aspirante', formData ? `${formData.nombre} ${formData.apellido}` : user?.fullName || ''], ['Programa', formData?.programa || inscriptions[0]?.program || ''], ['Periodo', `${new Date().getFullYear()} – ${new Date().getMonth() < 6 ? 'Primer' : 'Segundo'} Semestre`], ['Concepto', 'Derecho de Inscripcion']].map(([k, v]) => (
+                {[['Aspirante', formData ? `${formData.nombre} ${formData.apellido}` : user?.fullName || ''], ['Programa', formData?.programa || inscriptions.find(i => i.id === selectedInscription)?.program || ''], ['Periodo', `${new Date().getFullYear()} – ${new Date().getMonth() < 6 ? 'Primer' : 'Segundo'} Semestre`], ['Concepto', 'Derecho de Inscripcion']].map(([k, v]) => (
                   <div key={k}>
                     <div className={pagoStyles.receiptInfoLabel}>{k}</div>
                     <div className={pagoStyles.receiptInfoValue}>{v}</div>
@@ -932,7 +1171,6 @@ function ScreenPago() {
         {/* Sidebar */}
         <div className={layoutStyles.gridSidebar}>
           <SideProgress stage={paid ? 'pago-done' : 'pago'} />
-          <MetricsWidget currentStage="payment" />
           <ProcessFlowWidget currentStage="payment" />
           <div className={layoutStyles.sidebarCard}>
             <div className={layoutStyles.sidebarTitle}>Estados del pago</div>
@@ -970,15 +1208,6 @@ function ScreenPago() {
               </div>
 
               <div style={{ marginBottom: '0.75rem' }}>
-                <label className={styles.fieldLabel}>Tipo de documento</label>
-                <select value={paymentData.docType} onChange={e => setPaymentData({...paymentData, docType: e.target.value})} className={styles.fieldSelect}>
-                  <option value="CC">Cedula de Ciudadania</option>
-                  <option value="CE">Cedula de Extranjeria</option>
-                  <option value="TI">Tarjeta de Identidad</option>
-                </select>
-              </div>
-
-              <div style={{ marginBottom: '0.75rem' }}>
                 <label className={styles.fieldLabel}>Numero de documento *</label>
                 <input type="text" placeholder="1234567890" value={paymentData.docNumber} onChange={e => setPaymentData({...paymentData, docNumber: e.target.value})} className={styles.fieldInput} />
               </div>
@@ -1001,28 +1230,11 @@ function ScreenPago() {
               )}
 
               {method === 'tarjeta' && (
-                <>
-                  <div style={{ marginBottom: '0.75rem' }}>
-                    <label className={styles.fieldLabel}>Numero de tarjeta *</label>
-                    <input type="text" placeholder="XXXX XXXX XXXX XXXX" maxLength="19" value={paymentData.bank} onChange={e => setPaymentData({...paymentData, bank: e.target.value})} className={styles.fieldInput} />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                    <div>
-                      <label className={styles.fieldLabel}>Vencimiento</label>
-                      <input type="text" placeholder="MM/AA" maxLength="5" className={styles.fieldInput} />
-                    </div>
-                    <div>
-                      <label className={styles.fieldLabel}>CVV</label>
-                      <input type="text" placeholder="123" maxLength="4" className={styles.fieldInput} />
-                    </div>
-                  </div>
-                </>
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <label className={styles.fieldLabel}>Numero de tarjeta *</label>
+                  <input type="text" placeholder="XXXX XXXX XXXX XXXX" maxLength="19" value={paymentData.bank} onChange={e => setPaymentData({...paymentData, bank: e.target.value})} className={styles.fieldInput} />
+                </div>
               )}
-
-              <div style={{ marginBottom: '0.75rem' }}>
-                <label className={styles.fieldLabel}>Telefono de contacto</label>
-                <input type="text" placeholder="300 123 4567" value={paymentData.phone} onChange={e => setPaymentData({...paymentData, phone: e.target.value})} className={styles.fieldInput} />
-              </div>
 
               <div style={{ background: '#F9FAFB', borderRadius: '0.5rem', padding: '0.75rem', marginTop: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
@@ -1058,39 +1270,35 @@ function ScreenDocumentos() {
   const [uploading, setUploading] = useState(null)
   const [error, setError] = useState('')
 
-  const docTypes = [
-    { id: 'identity', label: 'Documento de Identidad', desc: 'Cedula de ciudadania, tarjeta de identidad o cedula de extranjeria vigente.' },
-    { id: 'icfes', label: 'Resultados ICFES / Pruebas de Estado', desc: 'Resultado oficial de las Pruebas Saber 11 emitido por el ICFES.' },
-    { id: 'diploma', label: 'Titulo o Diploma de Bachiller', desc: 'Diploma original o copia autenticada del titulo de bachillerato.' },
-    { id: 'acta', label: 'Acta de Grado', desc: 'Acta de grado de bachillerato emitida por la institucion educativa.' },
-    { id: 'adicional', label: 'Documento Academico Adicional', desc: 'Certificado de notas de 10° y 11° o documento academico complementario.' },
-  ]
-
   useEffect(() => {
+    let cancelled = false
     async function loadData() {
       try {
         const inscriptionsData = await inscriptionService.getMy()
-        setInscriptions(inscriptionsData)
-        if (inscriptionsData.length > 0) {
-          const firstId = inscriptionsData[0].id
+        if (cancelled) return
+        const list = Array.isArray(inscriptionsData) ? inscriptionsData : []
+        setInscriptions(list)
+        if (list.length > 0) {
+          const firstId = list[0].id
           setSelectedInscription(firstId)
           await loadDocs(firstId)
         }
       } catch (err) {
-        setError(err.message)
+        if (!cancelled) setError(err.message || 'Error al cargar inscripciones')
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
     loadData()
+    return () => { cancelled = true }
   }, [])
 
   async function loadDocs(inscriptionId) {
     try {
       const docsData = await documentService.getByInscription(inscriptionId)
-      setDocs(docsData)
+      setDocs(Array.isArray(docsData) ? docsData : [])
     } catch (err) {
-      setError(err.message)
+      setError(err.message || 'Error al cargar documentos')
     }
   }
 
@@ -1101,6 +1309,7 @@ function ScreenDocumentos() {
   }
 
   async function handleUpload(docType) {
+    if (!selectedInscription) return
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = '.pdf,.jpg,.jpeg,.png'
@@ -1123,9 +1332,9 @@ function ScreenDocumentos() {
 
   if (loading) return <LoadingSpinner />
 
-  const allDone = docTypes.every(dt => docs.some(d => d.docType === dt.id && d.status === 'uploaded'))
+  const allDone = DOC_TYPES.every(dt => docs.some(d => d.docType === dt.id && d.status === 'uploaded'))
   const uploadedN = docs.filter(d => d.status === 'uploaded').length
-  const pct = Math.round((uploadedN / docTypes.length) * 100)
+  const pct = Math.round((uploadedN / DOC_TYPES.length) * 100)
 
   const hero = (
     <div className={layoutStyles.hero}>
@@ -1137,7 +1346,7 @@ function ScreenDocumentos() {
         </div>
         <div className={documentosStyles.docsHeaderStats}>
           <div className={documentosStyles.docsCount}>
-            <div className={documentosStyles.docsCountNumber}>{uploadedN}/{docTypes.length}</div>
+            <div className={documentosStyles.docsCountNumber}>{uploadedN}/{DOC_TYPES.length}</div>
             <div className={documentosStyles.docsCountLabel}>documentos cargados</div>
           </div>
           <div className={documentosStyles.progressCircle}>
@@ -1161,6 +1370,13 @@ function ScreenDocumentos() {
   return (
     <ScreenLayout hero={hero}>
       {error && <ErrorMessage message={error} />}
+
+      {inscriptions.length === 0 && (
+        <div style={{ padding: '1rem', background: '#FFF8E7', borderRadius: '0.75rem', border: '1px solid #F0E0B0', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          <p style={{ color: '#8A6D1A', fontSize: '0.875rem', margin: 0 }}>No tienes inscripciones registradas. Crea tu inscripcion primero para subir documentos.</p>
+          <Btn size="sm" variant="secondary" onClick={() => setScreen('inscripcion')}>Ir a Inscripcion</Btn>
+        </div>
+      )}
 
       {inscriptions.length > 0 && (
         <div style={{ marginBottom: '1.25rem' }}>
@@ -1189,7 +1405,7 @@ function ScreenDocumentos() {
       <div className={layoutStyles.gridLayout}>
         <div className={layoutStyles.gridMain}>
           <div className={documentosStyles.docsList}>
-            {docTypes.map(dt => {
+            {DOC_TYPES.map(dt => {
               const doc = docs.find(d => d.docType === dt.id)
               const uploaded = doc?.status === 'uploaded'
               const isUploading = uploading === dt.id
@@ -1228,7 +1444,6 @@ function ScreenDocumentos() {
         {/* Sidebar */}
         <div className={layoutStyles.gridSidebar}>
           <SideProgress stage={allDone ? 'documentos-done' : 'documentos'} />
-          <MetricsWidget currentStage="documents" />
           <ProcessFlowWidget currentStage="documents" />
         </div>
       </div>
@@ -1240,34 +1455,65 @@ function ScreenDocumentos() {
 function ScreenResultados() {
   const { formData } = useApp()
   const [result, setResult] = useState(null)
+  const [latestIns, setLatestIns] = useState(null)
+  const [payment, setPayment] = useState(null)
+  const [docs, setDocs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    let cancelled = false
     async function loadResult() {
       try {
         const data = await admissionService.getMy()
-        setResult(data)
+        if (!cancelled) setResult(data)
       } catch (err) {
-        if (err.message.includes('no encontrado')) {
+        if (cancelled) return
+        if (err.status === 404) {
           setResult(null)
         } else {
-          setError(err.message)
+          setError(err.message || 'Error al cargar el resultado')
         }
+      }
+      try {
+        const insList = await inscriptionService.getMy()
+        if (cancelled) return
+        const ins = Array.isArray(insList) ? insList[0] : null
+        setLatestIns(ins)
+        if (ins) {
+          const [pay, docsData] = await Promise.all([
+            paymentService.getByInscription(ins.id).catch(() => null),
+            documentService.getByInscription(ins.id).catch(() => []),
+          ])
+          if (cancelled) return
+          setPayment(pay)
+          setDocs(Array.isArray(docsData) ? docsData : [])
+        }
+      } catch {
+        // sin datos auxiliares: el timeline muestra los estados pendientes
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
     loadResult()
+    return () => { cancelled = true }
   }, [])
 
   if (loading) return <LoadingSpinner />
 
+  const fmtDate = ts => (ts
+    ? new Date(ts).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
+    : null)
+  const paidDone = payment?.status === 'completed'
+  const uploadedTypes = new Set(docs.map(d => d.docType)).size
+  const lastUpload = docs[0]?.uploadedAt || null
+  const decided = !!result && result.decision !== 'pending'
+
   const timelineItems = [
-    { label: 'Inscripcion registrada', date: '10 Ago 2026', done: true },
-    { label: 'Pago confirmado', date: '12 Ago 2026', done: true },
-    { label: 'Documentos cargados', date: '15 Ago 2026', done: true },
-    { label: 'Evaluacion academica', date: 'En proceso', active: !result || result?.decision === 'pending' },
+    { label: 'Inscripcion registrada', date: fmtDate(latestIns?.createdAt) || 'Sin registro', done: !!latestIns },
+    { label: 'Pago confirmado', date: paidDone ? (fmtDate(payment.paidAt) || fmtDate(payment.createdAt)) : 'Pendiente', done: paidDone },
+    { label: 'Documentos cargados', date: uploadedTypes > 0 ? `${uploadedTypes}/${DOC_TYPE_COUNT} cargados · ${fmtDate(lastUpload)}` : `0/${DOC_TYPE_COUNT} cargados`, done: uploadedTypes >= DOC_TYPE_COUNT },
+    { label: 'Evaluacion academica', date: decided ? (fmtDate(result.evaluatedAt) || 'Evaluada') : 'En proceso', active: !decided, done: decided },
     { label: 'Resultado final', date: result?.decision === 'admitted' ? 'Admitido' : result?.decision === 'rejected' ? 'No admitido' : 'Pendiente', done: result?.decision === 'admitted' || result?.decision === 'rejected' },
   ]
 
@@ -1286,7 +1532,7 @@ function ScreenResultados() {
     <ScreenLayout hero={hero}>
       {error && <ErrorMessage message={error} />}
 
-      {!result && (
+      {(!result || result.decision === 'pending') && (
         <div className={resultadosStyles.resultCard}>
           <div className={resultadosStyles.resultCardInner}>
             <div className={resultadosStyles.resultIcon}>
@@ -1307,7 +1553,7 @@ function ScreenResultados() {
           <div className={resultadosStyles.admittedGrid}>
             <div className={resultadosStyles.admittedField}>
               <div className={resultadosStyles.admittedFieldLabel}>Programa</div>
-              <div className={resultadosStyles.admittedFieldValue}>{formData?.programa || result.period || 'Ingenieria de Sistemas'}</div>
+              <div className={resultadosStyles.admittedFieldValue}>{formData?.programa || latestIns?.program || 'No registrado'}</div>
             </div>
             <div className={resultadosStyles.admittedField}>
               <div className={resultadosStyles.admittedFieldLabel}>Periodo</div>
@@ -1327,24 +1573,9 @@ function ScreenResultados() {
           {result.notes && (
             <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#4B5563' }}>{result.notes}</p>
           )}
-          <div className={resultadosStyles.rejectedActions}>
-            <Btn variant="secondary" size="sm" onClick={() => alert('Funcion de reinscripcion pendiente')}>Reinscripcion</Btn>
-            <Btn variant="ghost" size="sm" onClick={() => alert('Contactar admisiones: admisiones@unac.edu.co')}>Contactar Admisiones</Btn>
-          </div>
-        </div>
-      )}
-
-      {result?.decision === 'pending' && (
-        <div className={resultadosStyles.resultCard}>
-          <div className={resultadosStyles.resultCardInner}>
-            <div className={resultadosStyles.resultIcon}>
-              <svg className={resultadosStyles.resultIconSvg} fill="#D6B656" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L11 14.5V7h1.5v6.86l4.62 2.74-.89 1.4z" /></svg>
-            </div>
-            <div>
-              <div className={resultadosStyles.resultTitle}>Tu solicitud esta en evaluacion</div>
-              <p className={resultadosStyles.resultDesc}>Te notificaremos cuando haya un resultado.</p>
-            </div>
-          </div>
+          <p className={resultadosStyles.rejectedDesc}>
+            Para reincribirte o resolver dudas, escribe a <strong>admisiones@unac.edu.co</strong>.
+          </p>
         </div>
       )}
 
@@ -1374,8 +1605,7 @@ function ScreenResultados() {
       </Card>
 
       {/* Metrics Sidebar */}
-      <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-        <MetricsWidget currentStage="admission" />
+      <div style={{ marginTop: '1.5rem' }}>
         <ProcessFlowWidget currentStage="admission" />
       </div>
     </ScreenLayout>
@@ -1393,67 +1623,73 @@ function getSavedProgress(userId) {
 
 function saveProgress(userId, screen, currentStep, formData) {
   if (!userId) return
-  localStorage.setItem(`inscriptionProgress_${userId}`, JSON.stringify({ screen, currentStep, formData }))
+  try {
+    localStorage.setItem(`inscriptionProgress_${userId}`, JSON.stringify({ screen, currentStep, formData }))
+  } catch {
+    // almacenamiento no disponible: el progreso no persiste entre sesiones
+  }
 }
 
 function clearProgress(userId) {
   if (!userId) return
-  localStorage.removeItem(`inscriptionProgress_${userId}`)
+  try {
+    localStorage.removeItem(`inscriptionProgress_${userId}`)
+  } catch {
+    // almacenamiento no disponible
+  }
 }
 
 export default function App() {
   const { user, loading: authLoading, logout } = useAuth()
-  const [screen, setScreen] = useState('inscripcion')
-  const [currentStep, setCurrentStep] = useState(0)
-  const [formData, setFormData] = useState(null)
-  const [restored, setRestored] = useState(false)
+
+  if (authLoading) return <LoadingSpinner />
+
+  if (!user) return <LoginScreen />
+
+  // key=user.id fuerza un remount limpio por cuenta: el estado (screen,
+  // currentStep, formData) de una cuenta nunca se filtra a la siguiente
+  return <AppShell key={user.id} user={user} onLogout={logout} />
+}
+
+function AppShell({ user, onLogout }) {
+  const isAdmin = user.role === 'admin'
+  const [initial] = useState(() => {
+    const saved = getSavedProgress(user.id)
+    if (saved && (saved.screen !== 'dashboard' || isAdmin)) return saved
+    return null
+  })
+  const [screen, setScreen] = useState(initial?.screen || 'inscripcion')
+  const [currentStep, setCurrentStep] = useState(initial?.currentStep ?? 0)
+  const [formData, setFormData] = useState(initial?.formData || null)
 
   useEffect(() => {
-    if (user) {
-      const progress = getSavedProgress(user.id)
-      if (progress) {
-        setScreen(progress.screen || 'inscripcion')
-        setCurrentStep(progress.currentStep ?? 0)
-        setFormData(progress.formData || null)
-      }
-      setRestored(true)
-    } else {
-      setRestored(true)
-    }
-  }, [user])
-
-  useEffect(() => {
-    if (user && restored) {
-      saveProgress(user.id, screen, currentStep, formData)
-    }
-  }, [screen, currentStep, formData, user, restored])
+    saveProgress(user.id, screen, currentStep, formData)
+  }, [user, screen, currentStep, formData])
 
   function handleLogout() {
-    clearProgress(user?.id)
-    logout()
+    clearProgress(user.id)
+    onLogout()
   }
 
   function handleDashboard() {
-    setScreen('dashboard')
+    if (isAdmin) setScreen('dashboard')
   }
 
   function handleBackFromDashboard() {
     setScreen('inscripcion')
   }
 
-  if (authLoading) return <LoadingSpinner />
-
-  if (!user) return <LoginScreen />
+  const activeScreen = screen === 'dashboard' && !isAdmin ? 'inscripcion' : screen
 
   return (
-    <AppContext.Provider value={{ screen, setScreen, currentStep, setCurrentStep, formData, setFormData, user }}>
+    <AppContext.Provider value={{ screen: activeScreen, setScreen, currentStep, setCurrentStep, formData, setFormData, user }}>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#F5F5F5' }}>
-        <AppHeader onLogout={handleLogout} onDashboard={handleDashboard} />
-        {screen === 'dashboard' && <DashboardAdmin onBack={handleBackFromDashboard} />}
-        {screen === 'inscripcion' && <ScreenInscripcion />}
-        {screen === 'pago' && <ScreenPago />}
-        {screen === 'documentos' && <ScreenDocumentos />}
-        {screen === 'resultados' && <ScreenResultados />}
+        <AppHeader onLogout={handleLogout} onDashboard={handleDashboard} isAdmin={isAdmin} />
+        {activeScreen === 'dashboard' && <DashboardAdmin onBack={handleBackFromDashboard} user={user} />}
+        {activeScreen === 'inscripcion' && <ScreenInscripcion />}
+        {activeScreen === 'pago' && <ScreenPago />}
+        {activeScreen === 'documentos' && <ScreenDocumentos />}
+        {activeScreen === 'resultados' && <ScreenResultados />}
       </div>
     </AppContext.Provider>
   )

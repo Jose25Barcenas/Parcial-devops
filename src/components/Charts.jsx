@@ -1,20 +1,24 @@
 import styles from '../styles/Dashboard.module.css'
 
-export function BarChart({ data, height = 200 }) {
-  const maxVal = Math.max(...data.map(d => d.value), 1)
+export function BarChart({ data, height = 200, formatValue, formatY }) {
+  const safeData = Array.isArray(data) ? data : []
+  if (safeData.length === 0) return <div className={styles.donutEmpty}>Sin datos</div>
+  const maxVal = Math.max(...safeData.map(d => d.value), 1)
+  const valueLabel = formatValue || (v => v)
+  const yLabel = formatY || valueLabel
   return (
     <div className={styles.barChart} style={{ height }}>
       <div className={styles.barChartYAxis}>
         {[maxVal, Math.round(maxVal * 0.75), Math.round(maxVal * 0.5), Math.round(maxVal * 0.25), 0].map((v, i) => (
-          <span key={i} className={styles.barChartYLabel}>{v}</span>
+          <span key={i} className={styles.barChartYLabel}>{yLabel(v)}</span>
         ))}
       </div>
       <div className={styles.barChartBars}>
-        {data.map((d, i) => (
-          <div key={i} className={styles.barChartCol}>
+        {safeData.map((d) => (
+          <div key={d.label} className={styles.barChartCol}>
             <div className={styles.barChartBarWrapper}>
               <div className={styles.barChartBar} style={{ height: `${(d.value / maxVal) * 100}%`, background: d.color || '#2A5783' }}>
-                <span className={styles.barChartBarValue}>{d.value}</span>
+                <span className={styles.barChartBarValue}>{valueLabel(d.value)}</span>
               </div>
             </div>
             <span className={styles.barChartLabel}>{d.label}</span>
@@ -26,13 +30,14 @@ export function BarChart({ data, height = 200 }) {
 }
 
 export function DonutChart({ data, size = 160, strokeWidth = 24 }) {
-  const total = data.reduce((sum, d) => sum + d.value, 0)
+  const safeData = Array.isArray(data) ? data : []
+  const total = safeData.reduce((sum, d) => sum + d.value, 0)
   if (total === 0) return <div className={styles.donutEmpty}>Sin datos</div>
 
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
 
-  const segments = data.reduce((acc, d) => {
+  const segments = safeData.reduce((acc, d) => {
     const pct = d.value / total
     const offset = circumference * acc.accumulated
     const length = circumference * pct
@@ -57,8 +62,8 @@ export function DonutChart({ data, size = 160, strokeWidth = 24 }) {
         <text x={size / 2} y={size / 2 + 12} textAnchor="middle" className={styles.donutLabel}>total</text>
       </svg>
       <div className={styles.donutLegend}>
-        {data.map((d, i) => (
-          <div key={i} className={styles.donutLegendItem}>
+        {safeData.map((d) => (
+          <div key={d.label} className={styles.donutLegendItem}>
             <span className={styles.donutLegendDot} style={{ background: d.color }} />
             <span className={styles.donutLegendText}>{d.label}: {d.value}</span>
           </div>
@@ -68,17 +73,19 @@ export function DonutChart({ data, size = 160, strokeWidth = 24 }) {
   )
 }
 
-export function LineChart({ data, height = 200 }) {
-  if (!data || data.length === 0) return null
-  const allValues = data.flatMap(d => [d.inscriptions || 0, d.payments || 0, d.documents || 0, d.admissions || 0])
-  const maxVal = Math.max(...allValues, 1)
+export function LineChart({ data, height = 200, series: seriesProp, formatY }) {
+  if (!Array.isArray(data) || data.length === 0) return null
 
-  const series = [
+  const series = seriesProp || [
     { key: 'inscriptions', label: 'Inscripciones', color: '#2A5783' },
     { key: 'payments', label: 'Pagos', color: '#D6B656' },
     { key: 'documents', label: 'Documentos', color: '#5B9BD5' },
     { key: 'admissions', label: 'Admisiones', color: '#4B7F52' },
   ]
+
+  const allValues = data.flatMap(d => series.map(s => d[s.key] || 0))
+  const maxVal = Math.max(...allValues, 1)
+  const yLabel = formatY || (v => v)
 
   return (
     <div className={styles.lineChart}>
@@ -93,7 +100,7 @@ export function LineChart({ data, height = 200 }) {
       <div className={styles.lineChartGrid} style={{ height }}>
         <div className={styles.lineChartYAxis}>
           {[maxVal, Math.round(maxVal * 0.5), 0].map((v, i) => (
-            <span key={i} className={styles.lineChartYLabel}>{v}</span>
+            <span key={i} className={styles.lineChartYLabel}>{yLabel(v)}</span>
           ))}
         </div>
         <div className={styles.lineChartArea}>
@@ -110,7 +117,7 @@ export function LineChart({ data, height = 200 }) {
             )
           })}
           <div className={styles.lineChartXLabels}>
-            {data.map((d, i) => <span key={i}>{d.month}</span>)}
+            {data.map((d) => <span key={d.month}>{d.month}</span>)}
           </div>
         </div>
       </div>
@@ -118,13 +125,14 @@ export function LineChart({ data, height = 200 }) {
   )
 }
 
-export function StageBar({ label, value, max, color, timeLabel }) {
+export function StageBar({ label, value, max, color, timeLabel, valueLabel }) {
   const pct = max > 0 ? (value / max) * 100 : 0
+  const displayValue = valueLabel === undefined ? `${value} procesos` : valueLabel
   return (
     <div className={styles.stageBar}>
       <div className={styles.stageBarHeader}>
         <span className={styles.stageBarLabel}>{label}</span>
-        <span className={styles.stageBarValue}>{value} procesos {timeLabel && `· ${timeLabel}`}</span>
+        <span className={styles.stageBarValue}>{displayValue}{timeLabel && ` · ${timeLabel}`}</span>
       </div>
       <div className={styles.stageBarTrack}>
         <div className={styles.stageBarFill} style={{ width: `${pct}%`, background: color }} />

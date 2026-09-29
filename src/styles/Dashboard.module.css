@@ -4,27 +4,23 @@
   max-width: 1400px;
   margin: 0 auto;
 }
-
 .dashboardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 2rem;
 }
-
 .dashboardTitle {
   font-size: 1.5rem;
   font-weight: 700;
   color: #111827;
   margin: 0;
 }
-
 .dashboardSubtitle {
   font-size: 0.875rem;
   color: #6B7280;
   margin: 0.25rem 0 0 0;
 }
-
 .dashboardBackBtn {
   display: flex;
   align-items: center;
@@ -38,12 +34,10 @@
   cursor: pointer;
   transition: all 0.15s;
 }
-
 .dashboardBackBtn:hover {
   background: #F9FAFB;
   border-color: #D1D5DB;
 }
-
 /* ─── KPI Cards ───────────────────────────────────────────────────────────── */
 .kpiGrid {
   display: grid;
@@ -51,7 +45,6 @@
   gap: 1rem;
   margin-bottom: 2rem;
 }
-
 .kpiCard {
   background: #fff;
   border-radius: 0.75rem;
@@ -59,18 +52,15 @@
   border: 1px solid #E5E7EB;
   transition: box-shadow 0.2s;
 }
-
 .kpiCard:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
-
 .kpiCardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 0.75rem;
 }
-
 .kpiCardIcon {
   width: 40px;
   height: 40px;
@@ -79,37 +69,17 @@
   align-items: center;
   justify-content: center;
 }
-
-.kpiCardTrend {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
-}
-
-.kpiCardTrendUp {
-  color: #4B7F52;
-  background: rgba(75, 127, 82, 0.1);
-}
-
-.kpiCardTrendDown {
-  color: #D32F2F;
-  background: rgba(211, 47, 47, 0.1);
-}
-
 .kpiCardValue {
   font-size: 1.75rem;
   font-weight: 700;
   color: #111827;
   line-height: 1;
 }
-
 .kpiCardLabel {
   font-size: 0.8125rem;
   color: #6B7280;
   margin-top: 0.375rem;
 }
-
 /* ─── Section Cards ───────────────────────────────────────────────────────── */
 .dashboardGrid {
   display: grid;
@@ -117,18 +87,12 @@
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
-
-.dashboardGridFull {
-  grid-column: 1 / -1;
-}
-
 .dashboardCard {
   background: #fff;
   border-radius: 0.75rem;
   border: 1px solid #E5E7EB;
   overflow: hidden;
 }
-
 .dashboardCardHeader {
   display: flex;
   align-items: center;
@@ -136,18 +100,15 @@
   padding: 1rem 1.25rem;
   border-bottom: 1px solid #F3F4F6;
 }
-
 .dashboardCardTitle {
   font-size: 0.9375rem;
   font-weight: 600;
   color: #111827;
   margin: 0;
 }
-
 .dashboardCardBody {
   padding: 1.25rem;
 }
-
 /* ─── Process Flow (BPM) ──────────────────────────────────────────────────── */
 .processFlow {
   display: flex;
@@ -156,7 +117,6 @@
   padding: 1.5rem 0;
   overflow-x: auto;
 }
-
 .processFlowNode {
   display: flex;
   flex-direction: column;
@@ -164,7 +124,6 @@
   min-width: 140px;
   flex-shrink: 0;
 }
-
 .processFlowCircle {
   width: 56px;
   height: 56px;
@@ -178,12 +137,10 @@
   position: relative;
   z-index: 2;
 }
-
 .processFlowCircleInscription { background: #2A5783; }
 .processFlowCirclePayment { background: #D6B656; }
 .processFlowCircleDocuments { background: #5B9BD5; }
 .processFlowCircleAdmission { background: #4B7F52; }
-
 .processFlowLabel {
   margin-top: 0.75rem;
   font-size: 0.8125rem;
@@ -191,21 +148,18 @@
   color: #374151;
   text-align: center;
 }
-
 .processFlowStats {
   margin-top: 0.375rem;
   font-size: 0.75rem;
   color: #6B7280;
   text-align: center;
 }
-
 .processFlowTime {
   margin-top: 0.25rem;
   font-size: 0.6875rem;
   color: #9CA3AF;
   text-align: center;
 }
-
 .processFlowArrow {
   display: flex;
   align-items: center;
@@ -213,14 +167,12 @@
   min-width: 60px;
   flex-shrink: 0;
 }
-
 .processFlowArrowLine {
   flex: 1;
   height: 2px;
   background: #D1D5DB;
   position: relative;
 }
-
 .processFlowArrowLine::after {
   content: '';
   position: absolute;
@@ -232,7 +184,6 @@
   border-top: 5px solid transparent;
   border-bottom: 5px solid transparent;
 }
-
 .processFlowArrowTime {
   position: absolute;
   top: -18px;
@@ -242,13 +193,11 @@
   color: #9CA3AF;
   white-space: nowrap;
 }
-
 /* ─── Process Table ───────────────────────────────────────────────────────── */
 .processTable {
   width: 100%;
   border-collapse: collapse;
 }
-
 .processTable th {
   text-align: left;
   padding: 0.625rem 0.75rem;
@@ -260,25 +209,21 @@
   border-bottom: 1px solid #E5E7EB;
   background: #F9FAFB;
 }
-
 .processTable td {
   padding: 0.75rem;
   font-size: 0.8125rem;
   color: #374151;
   border-bottom: 1px solid #F3F4F6;
 }
-
 .processTable tr:hover td {
   background: #F9FAFB;
 }
-
 .processTableId {
   font-weight: 600;
   color: #2A5783;
   font-family: monospace;
   font-size: 0.75rem;
 }
-
 .stageChip {
   display: inline-flex;
   align-items: center;
@@ -288,13 +233,11 @@
   font-size: 0.6875rem;
   font-weight: 500;
 }
-
 .stageChipInscription { background: rgba(42, 87, 131, 0.1); color: #2A5783; }
 .stageChipPayment { background: rgba(214, 182, 86, 0.15); color: #B8941E; }
 .stageChipDocuments { background: rgba(91, 155, 213, 0.1); color: #3A7CC0; }
 .stageChipAdmission { background: rgba(75, 127, 82, 0.1); color: #4B7F52; }
 .stageChipCompleted { background: rgba(75, 127, 82, 0.1); color: #4B7F52; }
-
 .decisionChip {
   display: inline-flex;
   padding: 0.25rem 0.625rem;
@@ -302,58 +245,49 @@
   font-size: 0.6875rem;
   font-weight: 500;
 }
-
 .decisionAdmitted { background: rgba(75, 127, 82, 0.1); color: #4B7F52; }
 .decisionRejected { background: rgba(211, 47, 47, 0.1); color: #D32F2F; }
 .decisionPending { background: rgba(214, 182, 86, 0.15); color: #B8941E; }
-
 .timeCell {
   font-family: monospace;
   font-size: 0.75rem;
   color: #6B7280;
 }
-
 /* ─── Bar Chart ───────────────────────────────────────────────────────────── */
 .barChart {
   display: flex;
   gap: 0.5rem;
 }
-
 .barChartYAxis {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding-bottom: 24px;
 }
-
 .barChartYLabel {
   font-size: 0.6875rem;
   color: #9CA3AF;
   text-align: right;
   min-width: 20px;
 }
-
 .barChartBars {
   display: flex;
   align-items: flex-end;
   gap: 0.5rem;
   flex: 1;
 }
-
 .barChartCol {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-
 .barChartBarWrapper {
   width: 100%;
   height: calc(100% - 24px);
   display: flex;
   align-items: flex-end;
 }
-
 .barChartBar {
   width: 100%;
   min-height: 4px;
@@ -361,7 +295,6 @@
   position: relative;
   transition: height 0.4s ease;
 }
-
 .barChartBarValue {
   position: absolute;
   top: -18px;
@@ -371,7 +304,6 @@
   font-weight: 600;
   color: #374151;
 }
-
 .barChartLabel {
   font-size: 0.6875rem;
   color: #6B7280;
@@ -382,73 +314,61 @@
   text-overflow: ellipsis;
   max-width: 80px;
 }
-
 /* ─── Donut Chart ─────────────────────────────────────────────────────────── */
 .donutChart {
   display: flex;
   align-items: center;
   gap: 1.5rem;
 }
-
 .donutEmpty {
   color: #9CA3AF;
   font-size: 0.875rem;
   text-align: center;
   padding: 2rem;
 }
-
 .donutSegment {
   transition: stroke-dasharray 0.4s ease;
 }
-
 .donutTotal {
   font-size: 1.5rem;
   font-weight: 700;
   fill: #111827;
 }
-
 .donutLabel {
   font-size: 0.75rem;
   fill: #9CA3AF;
 }
-
 .donutLegend {
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
 }
-
 .donutLegendItem {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
-
 .donutLegendDot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
-
 .donutLegendText {
   font-size: 0.8125rem;
   color: #374151;
 }
-
 /* ─── Line Chart ──────────────────────────────────────────────────────────── */
 .lineChart {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
-
 .lineChartLegend {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
 }
-
 .lineChartLegendItem {
   display: flex;
   align-items: center;
@@ -456,106 +376,74 @@
   font-size: 0.75rem;
   color: #6B7280;
 }
-
 .lineChartLegendDot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
 }
-
 .lineChartGrid {
   display: flex;
   gap: 0.5rem;
 }
-
 .lineChartYAxis {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
-
 .lineChartYLabel {
   font-size: 0.6875rem;
   color: #9CA3AF;
   text-align: right;
   min-width: 20px;
 }
-
 .lineChartArea {
   flex: 1;
   position: relative;
 }
-
 .lineChartSvg {
   width: 100%;
   height: calc(100% - 20px);
   display: block;
 }
-
 .lineChartXLabels {
   display: flex;
   justify-content: space-between;
   font-size: 0.6875rem;
   color: #9CA3AF;
 }
-
 /* ─── Stage Bar ───────────────────────────────────────────────────────────── */
 .stageBar {
   margin-bottom: 1rem;
 }
-
 .stageBar:last-child {
   margin-bottom: 0;
 }
-
 .stageBarHeader {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   margin-bottom: 0.375rem;
 }
-
 .stageBarLabel {
   font-size: 0.8125rem;
   font-weight: 500;
   color: #374151;
 }
-
 .stageBarValue {
   font-size: 0.75rem;
   color: #6B7280;
 }
-
 .stageBarTrack {
   height: 8px;
   background: #F3F4F6;
   border-radius: 4px;
   overflow: hidden;
 }
-
 .stageBarFill {
   height: 100%;
   border-radius: 4px;
   transition: width 0.5s ease;
 }
-
-/* ─── Metrics Widget (for user screens) ───────────────────────────────────── */
-.metricsWidget {
-  background: #fff;
-  border-radius: 0.75rem;
-  border: 1px solid #E5E7EB;
-  padding: 1rem;
-}
-
-.metricsWidgetTitle {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #6B7280;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 0.75rem;
-}
-
 .metricsWidgetItem {
   display: flex;
   align-items: center;
@@ -563,34 +451,20 @@
   padding: 0.5rem 0;
   border-bottom: 1px solid #F3F4F6;
 }
-
 .metricsWidgetItem:last-child {
   border-bottom: none;
 }
-
 .metricsWidgetItemLabel {
   font-size: 0.8125rem;
   color: #374151;
 }
-
 .metricsWidgetItemValue {
   font-size: 0.8125rem;
   font-weight: 600;
 }
-
 .metricsWidgetItemValueOk { color: #4B7F52; }
 .metricsWidgetItemValueWarn { color: #D6B656; }
 .metricsWidgetItemValueNeutral { color: #6B7280; }
-
-.metricsWidgetFooter {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #F3F4F6;
-  font-size: 0.75rem;
-  color: #9CA3AF;
-  text-align: center;
-}
-
 /* ─── Process Flow Widget (inline) ────────────────────────────────────────── */
 .processFlowWidget {
   display: flex;
@@ -598,7 +472,6 @@
   gap: 0;
   padding: 0.75rem 0;
 }
-
 .processFlowWidgetNode {
   display: flex;
   flex-direction: column;
@@ -606,7 +479,6 @@
   flex: 1;
   position: relative;
 }
-
 .processFlowWidgetDot {
   width: 32px;
   height: 32px;
@@ -619,27 +491,22 @@
   color: #fff;
   z-index: 2;
 }
-
 .processFlowWidgetDotDone {
   background: #4B7F52;
 }
-
 .processFlowWidgetDotActive {
   background: #2A5783;
   box-shadow: 0 0 0 3px rgba(42, 87, 131, 0.2);
 }
-
 .processFlowWidgetDotPending {
   background: #D1D5DB;
 }
-
 .processFlowWidgetLabel {
   margin-top: 0.375rem;
   font-size: 0.625rem;
   color: #6B7280;
   text-align: center;
 }
-
 .processFlowWidgetArrow {
   flex: 0.5;
   height: 2px;
@@ -647,11 +514,9 @@
   position: relative;
   margin-top: -16px;
 }
-
 .processFlowWidgetArrowDone {
   background: #4B7F52;
 }
-
 /* ─── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .kpiGrid {
@@ -661,23 +526,349 @@
     grid-template-columns: 1fr;
   }
 }
-
 @media (max-width: 640px) {
-  .dashboardWrapper {
+.dashboardWrapper {
     padding: 1rem;
   }
-  .kpiGrid {
+.kpiGrid {
     grid-template-columns: 1fr;
   }
-  .processFlow {
+.processFlow {
     flex-direction: column;
     align-items: stretch;
   }
-  .processFlowArrow {
+.processFlowArrow {
     transform: rotate(90deg);
     min-width: unset;
     min-height: 40px;
     padding: 0;
     justify-content: center;
   }
+}
+/* ─── Dashboard Extras: secciones, error, ingresos ───────────────────────── */
+.dashboardSectionTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6B7280;
+  margin: 0 0 0.75rem 0;
+}
+.kpiCardValueSm {
+  font-size: 1.25rem;
+}
+.dashboardError {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  color: #D32F2F;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+/* ─── Goals Panel ───────────────────────────────────────────────────────── */
+.goalsOverall {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #4B7F52;
+  background: rgba(75, 127, 82, 0.1);
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+}
+.goalsAddBtn {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #2A5783;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #2A5783;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.goalsAddBtn:hover {
+  background: rgba(42, 87, 131, 0.08);
+}
+.goalsError {
+  color: #D32F2F;
+  font-size: 0.8125rem;
+  margin: 0 0 0.75rem 0;
+}
+.goalsEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  color: #6B7280;
+  font-size: 0.875rem;
+  text-align: center;
+  margin: 0;
+}
+.goalsForm {
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.goalsFormGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+.goalsFormActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.875rem;
+}
+.goalsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+.goalCard {
+  border: 1px solid #E5E7EB;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  background: #fff;
+  transition: box-shadow 0.2s;
+}
+.goalCard:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.goalCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.goalCardTitle {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #111827;
+}
+.goalCardBadge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+.goalCardBadgeOk {
+  color: #4B7F52;
+  background: rgba(75, 127, 82, 0.1);
+}
+.goalCardBadgePending {
+  color: #B8941E;
+  background: rgba(214, 182, 86, 0.15);
+}
+.goalValues {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+}
+.goalValueItem {
+  display: flex;
+  flex-direction: column;
+}
+.goalValueLabel {
+  font-size: 0.6875rem;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.goalValueNumber {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+}
+.goalValueNumberOk {
+  color: #4B7F52;
+}
+.goalValueNumberGoal {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2A5783;
+  text-align: right;
+}
+.goalProgressTrack {
+  height: 8px;
+  background: #F3F4F6;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.goalProgressFill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+}
+.goalProgressFillOk {
+  background: #4B7F52;
+}
+.goalProgressFillPending {
+  background: #D6B656;
+}
+.goalFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+.goalPercent {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+}
+.goalPeriod {
+  font-size: 0.6875rem;
+  color: #9CA3AF;
+  background: #F3F4F6;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+}
+.goalActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #F3F4F6;
+}
+.goalActionBtn {
+  flex: 1;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #E5E7EB;
+  border-radius: 0.375rem;
+  background: #fff;
+  color: #374151;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.goalActionBtn:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+.goalActionBtnDanger {
+  color: #D32F2F;
+  border-color: #FECACA;
+}
+.goalActionBtnDanger:hover {
+  background: #FEF2F2;
+  border-color: #FCA5A5;
+}
+/* ─── Responsive de nuevas secciones ────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .goalsFormGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+.goalsFormGrid {
+    grid-template-columns: 1fr;
+  }
+.goalsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+/* ─── Paneles admin: admisiones y usuarios ─────────────────────────────── */
+.adminSectionTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 1rem 0 0.5rem;
+}
+.adminSectionTitle:first-child {
+  margin-top: 0;
+}
+.adminRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+.adminRowInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.adminRowName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+.adminRowMeta {
+  font-size: 0.75rem;
+  color: #6B7280;
+}
+.adminRowActions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.adminBadge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.adminBtn {
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: #fff;
+  transition: opacity 0.15s ease;
+}
+.adminBtn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.adminBtnSuccess {
+  background: rgba(75, 127, 82, 0.1);
+  color: #4B7F52;
+  border-color: rgba(75, 127, 82, 0.3);
+}
+.adminBtnSuccess:hover:not(:disabled) {
+  background: rgba(75, 127, 82, 0.18);
+}
+.adminBtnDanger {
+  background: rgba(211, 47, 47, 0.08);
+  color: #D32F2F;
+  border-color: rgba(211, 47, 47, 0.25);
+}
+.adminBtnDanger:hover:not(:disabled) {
+  background: rgba(211, 47, 47, 0.15);
+}
+.adminBtnNeutral {
+  background: #F3F4F6;
+  color: #374151;
+  border-color: #E5E7EB;
+}
+.adminBtnNeutral:hover:not(:disabled) {
+  background: #E5E7EB;
+}
+.adminEmpty {
+  color: #9CA3AF;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 1.25rem 0;
+  margin: 0;
 }
