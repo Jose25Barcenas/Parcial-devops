@@ -19,6 +19,16 @@ lint-frontend:
 test-backend:
   stage: test
   image: maven:3.9-eclipse-temurin-17
+  services:
+    - name: mongo:7
+      alias: mongo
+  variables:
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+    SPRING_DATA_MONGODB_URI: "mongodb://mongo:27017/sion_test_db"
+  cache:
+    key: maven
+    paths:
+      - .m2/repository
   script:
     - cd backend
     - mvn -B test

@@ -1,6 +1,6 @@
-# Contexto de build del backend: solo el jar empaquetado.
+# Contexto de build: el jar se compila dentro de la imagen (multi-stage).
+target
 uploads
-.env
-src
-pom.xml
 test-uploads
+.env
+.gitignore
