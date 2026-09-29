@@ -1,0 +1,12 @@
+# Contexto de build del frontend: solo se necesita el codigo de la app.
+node_modules
+dist
+backend
+.env
+.git
+.gitlab-ci.yml
+docker-compose.yml
+Dockerfile.frontend
+Dockerfile
+*.md
+USER_STORIES.md
