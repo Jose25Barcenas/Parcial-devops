@@ -14,6 +14,8 @@ server:
   port: ${SERVER_PORT:3000}
 
 app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,http://3.17.78.67:5173}
   jwt:
     secret: ${JWT_SECRET:mySecretKeyForSionUnac2026MustBe32Chars}
     expiration: 604800000
