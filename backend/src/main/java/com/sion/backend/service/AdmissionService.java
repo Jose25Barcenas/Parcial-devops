@@ -4,10 +4,14 @@ import com.sion.backend.dto.request.AdmissionRequest;
 import com.sion.backend.exception.ConflictException;
 import com.sion.backend.exception.ResourceNotFoundException;
 import com.sion.backend.model.AdmissionResult;
+import com.sion.backend.model.Credential;
 import com.sion.backend.model.Inscription;
+import com.sion.backend.model.User;
 import com.sion.backend.repository.AdmissionResultRepository;
 import com.sion.backend.repository.InscriptionRepository;
+import com.sion.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -18,10 +22,14 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AdmissionService {
 
     private final AdmissionResultRepository admissionResultRepository;
     private final InscriptionRepository inscriptionRepository;
+    private final UserRepository userRepository;
+    private final N8nService n8nService;
+    private final BlockchainService blockchainService;
 
     private static final List<String> VALID_DECISIONS = Arrays.asList("pending", "admitted", "rejected");
 
@@ -44,7 +52,69 @@ public class AdmissionService {
         result.setNotes(request.getNotes());
         result.setEvaluatedAt(LocalDateTime.now());
 
-        return admissionResultRepository.save(result);
+        AdmissionResult saved = admissionResultRepository.save(result);
+        notifyAdmission(saved, inscription);
+        if ("admitted".equals(saved.getDecision())) {
+            issueAdmissionCredential(saved, inscription);
+        }
+        return saved;
+    }
+
+    /**
+     * Fase Piloto blockchain: al admitir se emite automaticamente la carta de
+     * admision como credencial verificable anclada en el ledger (solo hash).
+     */
+    private void issueAdmissionCredential(AdmissionResult result, Inscription inscription) {
+        try {
+            if (inscription != null && blockchainService.findById(inscription.getId()).isPresent()) {
+                return;
+            }
+            var owner = inscription == null
+                    ? java.util.Optional.<User>empty()
+                    : userRepository.findById(inscription.getUserId());
+
+            Credential credential = blockchainService.issue(
+                    Credential.TYPE_ADMISION,
+                    "Carta de admision - " + (inscription != null ? inscription.getProgram() : ""),
+                    owner.map(User::getFullName).orElse("Titular no identificado"),
+                    "",
+                    owner.map(User::getEmail).orElse(""),
+                    inscription != null ? inscription.getId() : "",
+                    inscription != null ? inscription.getProgram() : "",
+                    result.getPeriod() != null ? result.getPeriod() : "",
+                    "comite-admision");
+
+            n8nService.sendCredentialIssued(java.util.Map.of(
+                    "credentialId", credential.getId(),
+                    "verificationCode", credential.getVerificationCode(),
+                    "type", credential.getType(),
+                    "email", credential.getHolderEmail(),
+                    "name", credential.getHolderName(),
+                    "program", credential.getProgram(),
+                    "verificationUrl", credential.getVerificationCode(),
+                    "issuedAt", String.valueOf(credential.getIssuedAt())
+            ));
+        } catch (Exception e) {
+            // La emision de credencial no debe romper la decision de admision.
+            log.warn("[blockchain] No se pudo emitir la credencial de admision: {}", e.getMessage());
+        }
+    }
+
+    private void notifyAdmission(AdmissionResult result, Inscription inscription) {
+        java.util.Optional<User> owner = inscription == null
+                ? java.util.Optional.empty()
+                : userRepository.findById(inscription.getUserId());
+        n8nService.sendAdmissionDecided(java.util.Map.of(
+                "admissionId", result.getId(),
+                "inscriptionId", result.getInscriptionId(),
+                "decision", result.getDecision(),
+                "period", result.getPeriod() != null ? result.getPeriod() : "",
+                "notes", result.getNotes() != null ? result.getNotes() : "",
+                "evaluatedAt", String.valueOf(result.getEvaluatedAt()),
+                "email", owner.map(User::getEmail).orElse(""),
+                "name", owner.map(User::getFullName).orElse(""),
+                "program", inscription != null ? inscription.getProgram() : ""
+        ));
     }
 
     public AdmissionResult findByUserId(String userId) {
@@ -90,6 +160,10 @@ public class AdmissionService {
         if (request.getNotes() != null) result.setNotes(request.getNotes());
         result.setEvaluatedAt(LocalDateTime.now());
 
-        return admissionResultRepository.save(result);
+        AdmissionResult saved = admissionResultRepository.save(result);
+
+        var inscription = inscriptionRepository.findById(saved.getInscriptionId()).orElse(null);
+        notifyAdmission(saved, inscription);
+        return saved;
     }
 }

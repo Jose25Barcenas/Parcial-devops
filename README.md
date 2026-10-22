@@ -33,7 +33,8 @@ sion_unac/
 │       ├── model/  dto/  repository/
 │       ├── service/  controller/
 │       └── security/  exception/
-├── docker-compose.yml          # MongoDB + Backend + Frontend
+├── docker-compose.yml          # MongoDB + Backend + Frontend + n8n
+├── n8n/workflows/              # Workflows de ejemplo para importar en n8n
 ├── Dockerfile.frontend
 ├── nginx.conf
 ├── .gitlab-ci.yml              # Pipeline CI/CD
@@ -50,6 +51,7 @@ docker-compose up --build
 # Frontend: http://localhost:5173
 # Backend API: http://localhost:3000
 # MongoDB: localhost:27017
+# n8n: http://localhost:5678 (admin / sion-n8n-2026)
 ```
 
 ### Desarrollo local (sin Docker)
@@ -103,6 +105,80 @@ Configurables en `backend/.env` o en `docker-compose.yml`:
 | `UPLOAD_DIR` | `./uploads` | Directorio de archivos subidos |
 | `JWT_SECRET` | (ver compose/.env) | Clave de firma JWT |
 | `DEMO_MODE` | `false` (`true` en compose) | Devuelve el codigo de recuperacion en la respuesta |
+| `N8N_BASE_URL` | `http://n8n:5678` | URL interna de n8n para enviar eventos |
+| `N8N_ENABLED` | `true` | Habilita el envio de eventos a n8n |
+| `N8N_BASIC_AUTH_USER` | `admin` | Usuario de acceso a la UI de n8n |
+| `N8N_BASIC_AUTH_PASSWORD` | `sion-n8n-2026` | Contrasena de la UI de n8n |
+
+## Automatizacion con n8n
+
+El backend envia eventos (sincrono, con timeout corto, sin bloquear la operacion) a n8n:
+
+| Evento | Disparado en | Webhook |
+|---|---|---|
+| `inscription-created` | `InscriptionService.create()` | `/webhook/inscription-created` |
+| `payment-confirmed` | `PaymentService` (confirmacion de pago) | `/webhook/payment-confirmed` |
+| `user-registered` | `UserService.register()` | `/webhook/user-registered` |
+| `document-uploaded` | `DocumentService.upload()` | `/webhook/document-uploaded` |
+| `admission-decided` | `AdmissionService.create()` / `update()` | `/webhook/admission-decided` |
+
+Los 5 workflows viven en `n8n/workflows/` y ya vienen con `active: true`.
+
+Para usarlo:
+
+1. `docker-compose up -build` (incluye el servicio `n8n` en el puerto 5678)
+2. Entrar a `http://localhost:5678` con `admin` / `sion-n8n-2026`
+3. Si los workflows no aparecen, importarlos desde `n8n/workflows/*.json`
+4. Conectar un nodo Email Send (SMTP/Gmail) y **activar** el workflow
+5. Ver el historial en la pestaña **Executions**
+
+Si n8n esta caido o no responde, el backend sigue funcionando normalmente (solo loguea un warning `[n8n]`).
+
+## Credenciales academicas con registro inmutable (Fase Piloto blockchain)
+
+Implementacion del piloto recomendado en la propuesta blockchain de la UNAC: emision de actas,
+diplomas, certificados de notas y cartas de admision como **credenciales verificables** ancladas
+en un ledger inmutable.
+
+**Diseno (alineado a la propuesta institucional):**
+
+| Principio | Implementacion |
+|---|---|
+| Off-chain / Habeas Data (Ley 1581) | Los datos del titular viven en la coleccion `credentials`. La cadena (`ledger_blocks`) **solo almacena hashes SHA-256** y un UUID opaco. |
+| Proof of Authority | Cada bloque se firma con `HMAC-SHA256` usando la llave institucional (`BLOCKCHAIN_AUTHORITY_KEY`). Solo la autoridad puede anclar bloques. |
+| Encadenamiento inmutable | Cada bloque guarda `previousHash`; el hash se recalcula como `SHA-256(index|timestamp|dataHash|previousHash|firma)`. |
+| Verificacion publica | `GET /api/v1/credentials/verify/{codigo}` **sin autenticacion**. Recalcula toda la cadena y detecta alteraciones. |
+| UX / QR | Cada credencial tiene una URL publica `/verify/{CODIGO}` que se imprime como QR en el certificado. |
+
+**Emision:**
+- **Automatica**: al registrar una decision `admitted` se emite la carta de admision.
+- **Manual**: desde el dashboard admin (seccion "Credenciales academicas"), eligiendo tipo e inscripcion.
+- **Revocacion**: ancla un bloque de tipo `revocation` sin romper la cadena historica.
+
+**Endpoints nuevos:**
+
+| Metodo | Ruta | Acceso |
+|---|---|---|
+| `POST` | `/credentials/issue` | admin |
+| `POST` | `/credentials/{id}/revoke` | admin |
+| `GET` | `/credentials` | admin |
+| `GET` | `/credentials/me` | usuario |
+| `GET` | `/credentials/ledger/status` | admin |
+| `GET` | `/credentials/ledger/blocks` | admin |
+| `GET` | `/credentials/ledger/validate` | admin |
+| `GET` | `/credentials/verify/{code}` | **publico** |
+
+**Probarlo:**
+
+1. Login como admin en `http://localhost:5173`
+2. Dashboard → seccion **Credenciales academicas**
+3. Emitir una credencial (o admitir una inscripcion para que se emita sola)
+4. Copiar el codigo (ej. `ACTA-Q3JRLSWS`) y abrir `http://localhost:5173/verify/ACTA-Q3JRLSWS`
+5. Aparece el badge **"Credencial autentica"**, el hash SHA-256, el ancla del ledger y el QR
+
+**Nota tecnica:** las fechas que entran en el hash se normalizan a milisegundos antes de
+hashear, porque MongoDB trunca los nanosegundos de `LocalDateTime` al persistir. Sin esa
+normalizacion el recalculo del hash fallaria al leer desde la BD.
 
 ## Funcionalidades destacadas
 

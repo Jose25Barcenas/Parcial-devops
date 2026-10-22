@@ -4,8 +4,10 @@ import com.sion.backend.exception.ResourceNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
 import com.sion.backend.model.AppDocument;
 import com.sion.backend.model.Inscription;
+import com.sion.backend.model.User;
 import com.sion.backend.repository.DocumentRepository;
 import com.sion.backend.repository.InscriptionRepository;
+import com.sion.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -27,6 +30,8 @@ public class DocumentService {
 
     private final DocumentRepository documentRepository;
     private final InscriptionRepository inscriptionRepository;
+    private final UserRepository userRepository;
+    private final N8nService n8nService;
 
     @Value("${app.upload.dir:./uploads}")
     private String uploadDir;
@@ -78,7 +83,22 @@ public class DocumentService {
             doc.setStatus("uploaded");
             doc.setUploadedAt(LocalDateTime.now());
 
-            return documentRepository.save(doc);
+            AppDocument saved = documentRepository.save(doc);
+
+            var owner = userRepository.findById(userId);
+            n8nService.sendDocumentUploaded(Map.of(
+                    "documentId", saved.getId(),
+                    "inscriptionId", inscriptionId,
+                    "docType", docType,
+                    "status", saved.getStatus(),
+                    "userId", userId,
+                    "email", owner.map(User::getEmail).orElse(""),
+                    "name", owner.map(User::getFullName).orElse(""),
+                    "program", inscription.getProgram(),
+                    "uploadedAt", String.valueOf(saved.getUploadedAt())
+            ));
+
+            return saved;
         } catch (IOException e) {
             throw new RuntimeException("Error al guardar el archivo", e);
         }

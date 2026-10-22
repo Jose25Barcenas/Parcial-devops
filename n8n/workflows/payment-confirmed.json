@@ -1,0 +1,49 @@
+{
+  "name": "SION - Pago confirmado",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payment-confirmed",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-payment",
+      "name": "Webhook Pago",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-200, 0],
+      "webhookId": "sion-payment-confirmed"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => ({\n  json: {\n    to: item.json.email || 'sin-correo@demo.local',\n    subject: 'SION UNAC - Pago confirmado',\n    name: item.json.name || 'Aspirante',\n    program: item.json.program,\n    amount: item.json.amount,\n    method: item.json.method,\n    transactionId: item.json.transactionId || 'N/A',\n    body: 'Hola ' + (item.json.name || 'Aspirante') + ', confirmamos tu pago de $' + item.json.amount + ' COP por inscripcion a ' + item.json.program + '.',\n    sentAt: new Date().toISOString()\n  }\n}));"
+      },
+      "id": "format-payment",
+      "name": "Formatar Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [100, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const i = items[0].json;\nreturn [{ json: { resumen: 'OK: pago de $' + i.amount + ' de ' + i.name + ' confirmado (' + i.method + ')', recibido: true, timestamp: i.sentAt } }];"
+      },
+      "id": "log-ok",
+      "name": "Registro Exitoso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 0]
+    }
+  ],
+  "connections": {
+    "Webhook Pago": {
+      "main": [[{ "node": "Formatar Email", "type": "main", "index": 0 }]]
+    },
+    "Formatar Email": {
+      "main": [[{ "node": "Registro Exitoso", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": true
+}

@@ -5,6 +5,7 @@ import { ProcessFlowDiagram, ProcessTable } from './ProcessTimeline'
 import GoalsPanel from './GoalsPanel'
 import AdmissionsPanel from './AdmissionsPanel'
 import UsersPanel from './UsersPanel'
+import CredentialsPanel from './CredentialsPanel'
 import styles from '../styles/Dashboard.module.css'
 
 const fmtCOP = v => `$${Math.round(Number(v) || 0).toLocaleString('es-CO')}`
@@ -325,6 +326,9 @@ export default function DashboardAdmin({ onBack, user }) {
 
       {/* Gestion de usuarios */}
       <UsersPanel currentUserId={user?.id} />
+
+      {/* Credenciales academicas - Blockchain (Fase Piloto) */}
+      <CredentialsPanel user={user} />
     </div>
   )
 }

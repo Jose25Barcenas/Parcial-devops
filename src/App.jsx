@@ -6,7 +6,9 @@ import { paymentService } from './services/paymentService.js'
 import { documentService } from './services/documentService.js'
 import { admissionService } from './services/admissionService.js'
 import DashboardAdmin from './components/DashboardAdmin.jsx'
+import VerifyCredential from './components/VerifyCredential.jsx'
 import { ProcessFlowWidget } from './components/ProcessFlowWidget.jsx'
+import { AutomationModal } from './components/AutomationModal.jsx'
 import styles from './styles/Components.module.css'
 import authStyles from './styles/Auth.module.css'
 import layoutStyles from './styles/Layout.module.css'
@@ -540,6 +542,7 @@ function RegisterForm({ onBack }) {
 
 function AppHeader({ onLogout, onDashboard, isAdmin }) {
   const { screen, setScreen, currentStep } = useApp()
+  const [showAutomation, setShowAutomation] = useState(false)
   const idx = STEPS.findIndex(s => s.id === screen)
 
   return (
@@ -555,6 +558,12 @@ function AppHeader({ onLogout, onDashboard, isAdmin }) {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          {isAdmin && (
+            <button onClick={() => setShowAutomation(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.875rem', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: '0.8125rem', cursor: 'pointer' }}>
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" /></svg>
+              Automatizacion
+            </button>
+          )}
           {isAdmin && (
             <button onClick={onDashboard} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.875rem', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: '0.8125rem', cursor: 'pointer' }}>
               <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" /></svg>
@@ -585,6 +594,7 @@ function AppHeader({ onLogout, onDashboard, isAdmin }) {
           })}
         </div>
       </div>
+      {showAutomation && <AutomationModal onClose={() => setShowAutomation(false)} />}
     </header>
   )
 }
@@ -1641,6 +1651,13 @@ function clearProgress(userId) {
 
 export default function App() {
   const { user, loading: authLoading, logout } = useAuth()
+
+  // Ruta PUBLICA de verificacion de credenciales (destino del QR).
+  // Se resuelve antes de cualquier chequeo de sesion: cualquier tercero
+  // puede validar un certificado escaneando el codigo.
+  if (window.location.pathname.startsWith('/verify')) {
+    return <VerifyCredential />
+  }
 
   if (authLoading) return <LoadingSpinner />
 

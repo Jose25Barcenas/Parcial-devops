@@ -1,0 +1,61 @@
+{
+  "name": "SION - Documento cargado",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "document-uploaded",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-doc",
+      "name": "Webhook Documento",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-200, 0],
+      "webhookId": "sion-document-uploaded"
+    },
+    {
+      "parameters": {
+        "jsCode": "const tipos = {\n  identity: 'Documento de identidad',\n  icfes: 'Resultado ICFES',\n  diploma: 'Diploma de bachiller',\n  acta: 'Acta de grado',\n  adicional: 'Documento adicional'\n};\nreturn items.map(item => ({\n  json: {\n    to: item.json.email || 'sin-correo@demo.local',\n    subject: 'SION UNAC - Documento recibido: ' + (tipos[item.json.docType] || item.json.docType),\n    name: item.json.name || 'Aspirante',\n    docType: item.json.docType,\n    program: item.json.program,\n    body: 'Hola ' + (item.json.name || 'Aspirante') + ', recibimos tu documento ' + (tipos[item.json.docType] || item.json.docType) + ' para el programa ' + item.json.program + '. Estado: ' + item.json.status + '.',\n    sentAt: new Date().toISOString()\n  }\n}));"
+      },
+      "id": "format-email",
+      "name": "Formatar Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [100, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const i = items[0].json;\nreturn [{ json: { resumen: 'OK: documento ' + i.docType + ' de ' + i.name + ' registrado', recibido: true, timestamp: i.sentAt } }];"
+      },
+      "id": "log-ok",
+      "name": "Registro Exitoso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 0]
+    },
+    {
+      "parameters": {
+        "content": "### Control documental\nSe dispara con cada documento subido por el aspirante.\nUtil para alertar cuando faltan documentos.",
+        "width": 300,
+        "height": 110
+      },
+      "id": "note-1",
+      "name": "Nota Demo",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [100, -190]
+    }
+  ],
+  "connections": {
+    "Webhook Documento": {
+      "main": [[{ "node": "Formatar Email", "type": "main", "index": 0 }]]
+    },
+    "Formatar Email": {
+      "main": [[{ "node": "Registro Exitoso", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": true
+}

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +30,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final N8nService n8nService;
 
     private String normalizeEmail(String email) {
         return email == null ? null : email.trim().toLowerCase();
@@ -49,7 +51,17 @@ public class UserService {
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
 
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+
+        n8nService.sendUserRegistered(Map.of(
+                "userId", saved.getId(),
+                "email", saved.getEmail(),
+                "name", saved.getFullName(),
+                "role", saved.getRole(),
+                "registeredAt", String.valueOf(saved.getCreatedAt())
+        ));
+
+        return saved;
     }
 
     public User findByEmail(String email) {

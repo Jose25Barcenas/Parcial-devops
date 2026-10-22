@@ -1,0 +1,61 @@
+{
+  "name": "SION - Resultado de admision",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "admission-decided",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-admission",
+      "name": "Webhook Admision",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-200, 0],
+      "webhookId": "sion-admission-decided"
+    },
+    {
+      "parameters": {
+        "jsCode": "const labels = { admitted: 'ADMITIDO', rejected: 'NO ADMITIDO', pending: 'EN REVISION' };\nreturn items.map(item => ({\n  json: {\n    to: item.json.email || 'sin-correo@demo.local',\n    subject: 'SION UNAC - Resultado de admision: ' + (labels[item.json.decision] || item.json.decision),\n    name: item.json.name || 'Aspirante',\n    decision: item.json.decision,\n    program: item.json.program,\n    period: item.json.period,\n    body: 'Hola ' + (item.json.name || 'Aspirante') + ', tu resultado de admision para ' + item.json.program + ' (periodo ' + item.json.period + ') es: ' + (labels[item.json.decision] || item.json.decision) + '.',\n    sentAt: new Date().toISOString()\n  }\n}));"
+      },
+      "id": "format-email",
+      "name": "Formatar Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [100, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const i = items[0].json;\nreturn [{ json: { resumen: 'OK: admision ' + i.decision + ' para ' + i.name + ' (' + i.program + ')', recibido: true, timestamp: i.sentAt } }];"
+      },
+      "id": "log-ok",
+      "name": "Registro Exitoso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 0]
+    },
+    {
+      "parameters": {
+        "content": "### Notificacion de admision\nSe dispara cuando el comite registra el resultado.\nAqui va tambien un SMS o Telegram al aspirante.",
+        "width": 300,
+        "height": 110
+      },
+      "id": "note-1",
+      "name": "Nota Demo",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [100, -190]
+    }
+  ],
+  "connections": {
+    "Webhook Admision": {
+      "main": [[{ "node": "Formatar Email", "type": "main", "index": 0 }]]
+    },
+    "Formatar Email": {
+      "main": [[{ "node": "Registro Exitoso", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": true
+}

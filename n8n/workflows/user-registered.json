@@ -1,0 +1,61 @@
+{
+  "name": "SION - Usuario registrado",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "user-registered",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-user",
+      "name": "Webhook Usuario",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-200, 0],
+      "webhookId": "sion-user-registered"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => ({\n  json: {\n    to: item.json.email || 'sin-correo@demo.local',\n    subject: 'Bienvenido a SION UNAC',\n    name: item.json.name || 'Aspirante',\n    userId: item.json.userId,\n    role: item.json.role,\n    body: 'Hola ' + (item.json.name || 'Aspirante') + ', tu cuenta fue creada correctamente. Ya puedes iniciar sesion y completar tu inscripcion.',\n    sentAt: new Date().toISOString()\n  }\n}));"
+      },
+      "id": "format-email",
+      "name": "Formatar Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [100, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const i = items[0].json;\nreturn [{ json: { resumen: 'OK: usuario ' + i.name + ' (' + i.to + ') registrado', recibido: true, timestamp: i.sentAt } }];"
+      },
+      "id": "log-ok",
+      "name": "Registro Exitoso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 0]
+    },
+    {
+      "parameters": {
+        "content": "### Bienvenida automatica\nCada cuenta nueva dispara este workflow.\nConectar aqui un nodo **Email Send** (SMTP) para envio real.",
+        "width": 300,
+        "height": 120
+      },
+      "id": "note-1",
+      "name": "Nota Demo",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [100, -200]
+    }
+  ],
+  "connections": {
+    "Webhook Usuario": {
+      "main": [[{ "node": "Formatar Email", "type": "main", "index": 0 }]]
+    },
+    "Formatar Email": {
+      "main": [[{ "node": "Registro Exitoso", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": true
+}

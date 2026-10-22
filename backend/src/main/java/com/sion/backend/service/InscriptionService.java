@@ -4,7 +4,9 @@ import com.sion.backend.dto.request.InscriptionRequest;
 import com.sion.backend.dto.response.InscriptionResponse;
 import com.sion.backend.exception.ResourceNotFoundException;
 import com.sion.backend.model.Inscription;
+import com.sion.backend.model.User;
 import com.sion.backend.repository.InscriptionRepository;
+import com.sion.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,12 +15,16 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class InscriptionService {
 
     private final InscriptionRepository inscriptionRepository;
+    private final UserRepository userRepository;
+    private final N8nService n8nService;
 
     private static final List<String> VALID_PROGRAMS = Arrays.asList(
         "Ingenieria de Sistemas", "Ingenieria Industrial", "Administracion de Empresas",
@@ -45,7 +51,20 @@ public class InscriptionService {
         inscription.setCreatedAt(LocalDateTime.now());
         inscription.setUpdatedAt(LocalDateTime.now());
 
-        return inscriptionRepository.save(inscription);
+        Inscription saved = inscriptionRepository.save(inscription);
+
+        Optional<User> user = userRepository.findById(userId);
+        n8nService.sendInscriptionCreated(Map.of(
+                "inscriptionId", saved.getId(),
+                "userId", userId,
+                "program", saved.getProgram(),
+                "schedule", saved.getSchedule(),
+                "status", saved.getStatus(),
+                "email", user.map(User::getEmail).orElse(""),
+                "name", user.map(User::getFullName).orElse("")
+        ));
+
+        return saved;
     }
 
     public List<InscriptionResponse> findByUserId(String userId) {

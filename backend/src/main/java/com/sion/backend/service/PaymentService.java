@@ -6,8 +6,10 @@ import com.sion.backend.exception.ResourceNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
 import com.sion.backend.model.Inscription;
 import com.sion.backend.model.Payment;
+import com.sion.backend.model.User;
 import com.sion.backend.repository.InscriptionRepository;
 import com.sion.backend.repository.PaymentRepository;
+import com.sion.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,8 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -29,6 +33,8 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final InscriptionRepository inscriptionRepository;
+    private final UserRepository userRepository;
+    private final N8nService n8nService;
 
     @Value("${app.upload.dir:./uploads}")
     private String uploadDir;
@@ -102,7 +108,23 @@ public class PaymentService {
             inscriptionRepository.save(inscription);
         }
 
-        return paymentRepository.save(payment);
+        Payment saved = paymentRepository.save(payment);
+
+        Optional<User> user = inscription != null
+                ? userRepository.findById(inscription.getUserId())
+                : Optional.empty();
+        n8nService.sendPaymentConfirmed(Map.of(
+                "paymentId", saved.getId(),
+                "inscriptionId", saved.getInscriptionId(),
+                "amount", saved.getAmount(),
+                "method", saved.getMethod(),
+                "transactionId", saved.getTransactionId() != null ? saved.getTransactionId() : "",
+                "email", user.map(User::getEmail).orElse(""),
+                "name", user.map(User::getFullName).orElse(""),
+                "program", inscription != null ? inscription.getProgram() : ""
+        ));
+
+        return saved;
     }
 
     public Payment uploadReceipt(String id, MultipartFile file, String userId) {
