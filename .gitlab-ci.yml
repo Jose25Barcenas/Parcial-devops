@@ -2,6 +2,7 @@ stages:
   - lint
   - test
   - build
+  - deploy
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
@@ -57,3 +58,23 @@ build-backend:
     - docker push $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
+
+# Despliegue a EC2 (manual): requiere las variables de proyecto
+# SSH_PRIVATE_KEY (contenido de Jose25.pem) y EC2_HOST (IP publica de la instancia)
+deploy-aws:
+  stage: deploy
+  image: alpine:3.19
+  before_script:
+    - apk add --no-cache openssh-client
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed25519
+  script:
+    - >
+      ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_ed25519 ubuntu@$EC2_HOST
+      "cd /opt/sion
+      && git pull
+      && docker-compose -f docker-compose.yml -f docker-compose.deploy.yml up -d --build"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual

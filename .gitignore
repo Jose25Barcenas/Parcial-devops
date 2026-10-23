@@ -42,5 +42,12 @@ backend/uploads/*
 .env
 backend/.env
 
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+
 # Carpetas basura
 backend;C/

@@ -1,0 +1,11 @@
+# Override para despliegue en AWS (se usa junto a docker-compose.yml):
+# docker-compose -f docker-compose.yml -f docker-compose.deploy.yml up -d --build
+services:
+  frontend:
+    ports:
+      - "80:80"
+
+  backend:
+    environment:
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:5173,http://localhost:3000}

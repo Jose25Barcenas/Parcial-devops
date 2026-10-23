@@ -33,11 +33,19 @@ sion_unac/
 │       ├── model/  dto/  repository/
 │       ├── service/  controller/
 │       └── security/  exception/
-├── docker-compose.yml          # MongoDB + Backend + Frontend + n8n
+├── terraform/                  # Infraestructura en AWS (VPC, ASG, CloudWatch)
+│   ├── main.tf                 # VPC, subnets, security group, IAM, AMI
+│   ├── launch_template.tf      # Plantilla de lanzamiento
+│   ├── autoscaling.tf          # Auto Scaling Group + escalado por CPU
+│   ├── cloudwatch.tf           # Dashboard + alarmas
+│   ├── user_data.sh.tpl        # Despliegue automatico de la app en EC2
+│   └── outputs.tf              # URLs y comandos de salida
+├── docker-compose.yml          # MongoDB + Backend + Frontend + n8n (local)
+├── docker-compose.deploy.yml   # Override para AWS (puerto 80)
 ├── n8n/workflows/              # Workflows de ejemplo para importar en n8n
 ├── Dockerfile.frontend
 ├── nginx.conf
-├── .gitlab-ci.yml              # Pipeline CI/CD
+├── .gitlab-ci.yml              # Pipeline CI/CD (lint, test, build, deploy)
 └── USER_STORIES.md
 ```
 
@@ -83,6 +91,96 @@ npm run lint      # Linter (oxlint)
 # Backend
 cd backend && mvn test
 ```
+
+## El proyecto en breve (pitch)
+
+**Problema:** la UNAC gestionaba las inscripciones y admisiones de aspirantes de forma manual: formatos en papel, pagos sin integración, documentos dispersos y cero trazabilidad del proceso; los aspirantes desconocían el estado de su admisión.
+
+**Solución:** SION es una plataforma web que digitaliza el ciclo completo —registro, pago del derecho de inscripción, carga de documentos y publicación del resultado— con dashboard administrativo de KPIs, automatización de notificaciones con n8n y credenciales académicas verificables con registro inmutable (piloto blockchain).
+
+**DevOps:** el proyecto se entrega con pipeline CI/CD en GitLab (lint → test → build → deploy), infraestructura como código con Terraform en AWS (VPC, Auto Scaling, Launch Template) y monitoreo con dashboard de CloudWatch en verde.
+
+## Despliegue en AWS (Terraform)
+
+Infraestructura como código en `terraform/`:
+
+| Recurso | Descripción |
+|---|---|
+| VPC | `10.0.0.0/16` con 2 subnets públicas (2 zonas de disponibilidad), IGW y route table |
+| Security Group | Puertos 22 (SSH), 80 (app), 5173 y 3000 |
+| IAM | Rol + instance profile con políticas de CloudWatch y SSM Session Manager |
+| Launch Template | Plantilla con AMI Ubuntu 22.04 (o Packer), 20 GB gp3 y user data |
+| Auto Scaling Group | min 1 / desired 1 / max 2, con escalado automático al 60% de CPU |
+| CloudWatch | Dashboard `SION-Production-Dashboard` + 3 alarmas |
+
+Flujo del user data en la instancia:
+
+```
+arranque EC2 → swap 3G → docker + docker-compose → git clone del repo
+→ docker-compose up (mongo + backend + frontend en :80 + n8n)
+→ cron cada 1 min: curl /health → publica métrica SION/Application HealthCheck
+```
+
+### Pasos
+
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars   # ajustar valores
+terraform init
+terraform plan
+terraform apply    # aprobar con yes
+```
+
+### Salidas
+
+- `cloudwatch_dashboard_url` → dashboard de CloudWatch
+- `get_app_ip_command` → comando para obtener la IP pública de la app (la app queda en `http://<IP>`)
+
+> El backend de estado local está por defecto. Si en la cuenta de AWS ya existe el bucket
+> `sion-unac-tfstate`, descomentar el bloque `backend "s3"` en `terraform/main.tf`.
+
+## CI/CD (GitLab CI)
+
+| Etapa | Job | Que hace |
+|-------|-----|----------|
+| lint | `lint-frontend` | `npm run lint` (oxlint) |
+| test | `test-backend` | `mvn test` con MongoDB como servicio |
+| build | `build-frontend` / `build-backend` | Build e push de imagenes Docker al registry (solo `main`) |
+| deploy | `deploy-aws` | **Manual**: SSH a EC2, `git pull` y `docker-compose up` con override de producción |
+
+Variables requeridas para el deploy (Settings → CI/CD → Variables):
+
+| Variable | Valor |
+|----------|-------|
+| `SSH_PRIVATE_KEY` | Contenido completo de `Jose25.pem` (Type: File) |
+| `EC2_HOST` | IP pública de la instancia EC2 |
+
+## Monitoreo (CloudWatch)
+
+Dashboard **`SION-Production-Dashboard`** con:
+
+- **Widget de texto**: titulo, problema que resuelve y arquitectura (para la demo)
+- **CPU del Auto Scaling Group** y **Status Checks EC2** (0 = sano)
+- **Salud de la app**: metrica propia `SION/Application HealthCheck` (1 = responde `/health`)
+- **Red** (entrante/saliente) y **estado de alarmas** (OK = verde)
+
+Alarmas (todas en estado **OK** cuando todo funciona):
+
+| Alarma | Dispara si |
+|---|---|
+| `sion-status-check` | El status check de EC2 falla |
+| `sion-app-health` | `/health` deja de responder por 2 minutos |
+| `sion-cpu-high` | CPU > 80% durante 15 minutos |
+
+## Checklist para la entrega (reunión)
+
+Pasos que requieren credenciales o acceso (no se pudieron hacer antes):
+
+1. **AWS**: `aws configure` con el Access Key/Secret del profe (región `us-east-2`)
+2. **Terraform**: `cd terraform && terraform init && terraform apply`
+3. **Verificar**: abrir la app en `http://<IP>` (login debe funcionar) y el dashboard en CloudWatch (todo verde)
+4. **GitLab**: subir el repo y agregar en Settings → CI/CD las variables `SSH_PRIVATE_KEY` y `EC2_HOST`; activar el job manual `deploy-aws`
+5. **Permisos**: que el dueño del proyecto suba tu rol de Guest a Reporter (para ver pipelines)
 
 ## Seguridad
 
