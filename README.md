@@ -2,6 +2,15 @@
 
 Plataforma web para gestionar el proceso de inscripcion y admision de aspirantes a programas academicos de pregrado de la Corporacion Universitaria Adventista (UNAC).
 
+## Equipo
+
+- Jose Barcenas
+- Miguel Martinez
+- Andres Dias
+- Norbey Lopez
+- Jose Cerda
+- Diego Afanador
+
 ## Tecnologias y dependencias
 
 **Frontend**
