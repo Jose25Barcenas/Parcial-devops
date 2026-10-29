@@ -1,8 +1,16 @@
 # SION - Sistema de Inscripcion y Admision Online
 
+## Descripcion del Proyecto
+
 Plataforma web para gestionar el proceso de inscripcion y admision de aspirantes a programas academicos de pregrado de la Corporacion Universitaria Adventista (UNAC).
 
-## Equipo
+**Problema:** la UNAC gestionaba las inscripciones y admisiones de aspirantes de forma manual: formatos en papel, pagos sin integración, documentos dispersos y cero trazabilidad del proceso; los aspirantes desconocían el estado de su admisión.
+
+**Solución:** SION es una plataforma web que digitaliza el ciclo completo —registro, pago del derecho de inscripción, carga de documentos y publicación del resultado— con dashboard administrativo de KPIs, automatización de notificaciones con n8n y credenciales académicas verificables con registro inmutable (piloto blockchain).
+
+**DevOps:** el proyecto se entrega con pipeline CI/CD en GitLab (lint → test → build → deploy), infraestructura como código con Terraform en AWS (VPC, Auto Scaling, Launch Template), imágenes de AMI generadas con Packer y monitoreo con dashboard de CloudWatch en verde.
+
+## Integrantes
 
 - Jose Barcenas
 - Miguel Martinez
@@ -11,7 +19,7 @@ Plataforma web para gestionar el proceso de inscripcion y admision de aspirantes
 - Jose Cerda
 - Diego Afanador
 
-## Tecnologias y dependencias
+## Prerequisitos o dependencias
 
 **Frontend**
 - React 19.2, Vite 8.2, CSS Modules
@@ -58,7 +66,7 @@ sion_unac/
 └── USER_STORIES.md
 ```
 
-## Instrucciones de ejecucion
+## Metodo de Instalacion
 
 ### Con Docker (Recomendado)
 
@@ -100,14 +108,6 @@ npm run lint      # Linter (oxlint)
 # Backend
 cd backend && mvn test
 ```
-
-## El proyecto en breve (pitch)
-
-**Problema:** la UNAC gestionaba las inscripciones y admisiones de aspirantes de forma manual: formatos en papel, pagos sin integración, documentos dispersos y cero trazabilidad del proceso; los aspirantes desconocían el estado de su admisión.
-
-**Solución:** SION es una plataforma web que digitaliza el ciclo completo —registro, pago del derecho de inscripción, carga de documentos y publicación del resultado— con dashboard administrativo de KPIs, automatización de notificaciones con n8n y credenciales académicas verificables con registro inmutable (piloto blockchain).
-
-**DevOps:** el proyecto se entrega con pipeline CI/CD en GitLab (lint → test → build → deploy), infraestructura como código con Terraform en AWS (VPC, Auto Scaling, Launch Template) y monitoreo con dashboard de CloudWatch en verde.
 
 ## Despliegue en AWS (Terraform)
 
