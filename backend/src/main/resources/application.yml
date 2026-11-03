@@ -27,6 +27,7 @@ app:
   blockchain:
     authority-key: ${BLOCKCHAIN_AUTHORITY_KEY:sion-unac-authority-key-2026}
   public-base-url: ${PUBLIC_BASE_URL:http://localhost:5173}
+  version: ${APP_VERSION:1.0.0}
 
 # demo-mode devuelve el codigo de recuperacion en la respuesta (solo demo local;
 # se activa explicitamente via variable de entorno DEMO_MODE en docker-compose.yml)

@@ -6,6 +6,7 @@ import GoalsPanel from './GoalsPanel'
 import AdmissionsPanel from './AdmissionsPanel'
 import UsersPanel from './UsersPanel'
 import CredentialsPanel from './CredentialsPanel'
+import SystemStatusModal from './SystemStatusModal'
 import styles from '../styles/Dashboard.module.css'
 
 const fmtCOP = v => `$${Math.round(Number(v) || 0).toLocaleString('es-CO')}`
@@ -71,6 +72,7 @@ export default function DashboardAdmin({ onBack, user }) {
   const [stageCounts, setStageCounts] = useState({})
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [showStatus, setShowStatus] = useState(false)
 
   const mountedRef = useRef(true)
 
@@ -127,10 +129,16 @@ export default function DashboardAdmin({ onBack, user }) {
         <h1 className={styles.dashboardTitle}>Business Process Management</h1>
         <p className={styles.dashboardSubtitle}>Dashboard de analitica, metricas e indicadores del proceso de admision</p>
       </div>
-      <button onClick={onBack} className={styles.dashboardBackBtn}>
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-        Volver al proceso
-      </button>
+      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <button onClick={() => setShowStatus(true)} className={styles.statusBtn}>
+          <span className={styles.statusBtnDot} />
+          Estado del sistema
+        </button>
+        <button onClick={onBack} className={styles.dashboardBackBtn}>
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+          Volver al proceso
+        </button>
+      </div>
     </div>
   )
 
@@ -329,6 +337,9 @@ export default function DashboardAdmin({ onBack, user }) {
 
       {/* Credenciales academicas - Blockchain (Fase Piloto) */}
       <CredentialsPanel user={user} />
+
+      {/* Estado del sistema (DevOps) */}
+      {showStatus && <SystemStatusModal onClose={() => setShowStatus(false)} />}
     </div>
   )
 }

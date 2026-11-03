@@ -3,6 +3,7 @@ package com.sion.backend.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,9 @@ public class HealthController {
 
     private final MongoTemplate mongoTemplate;
 
+    @Value("${app.version:1.0.0}")
+    private String version;
+
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> health() {
         boolean dbUp;
@@ -34,6 +38,7 @@ public class HealthController {
         Map<String, Object> body = new HashMap<>();
         body.put("status", dbUp ? "ok" : "degraded");
         body.put("database", dbUp ? "up" : "down");
+        body.put("version", version);
         body.put("timestamp", LocalDateTime.now().toString());
         body.put("service", "sion-backend");
         return ResponseEntity.status(dbUp ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE).body(body);
